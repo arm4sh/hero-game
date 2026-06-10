@@ -572,6 +572,144 @@
     80% { transform: translate(6px, 4px); }
   }
 
+  /* ===== CENTERED FIGHT STAGE ===== */
+  #fight-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, 5vw, 40px);
+    z-index: 45;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  #fight-stage.active { opacity: 1; }
+
+  .fs-hero {
+    font-size: clamp(70px, 22vw, 150px);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+  }
+  .fs-enemy {
+    font-size: clamp(70px, 22vw, 150px);
+    transform: scaleX(-1);
+    filter: drop-shadow(0 0 12px #ff0033) drop-shadow(0 0 22px #660000) contrast(1.3) brightness(0.85);
+  }
+  .fs-burst {
+    position: absolute;
+    left: 50%; top: 48%;
+    transform: translate(-50%,-50%);
+    font-size: clamp(70px, 22vw, 150px);
+    opacity: 0;
+    z-index: 50;
+  }
+  .fs-burst.boom { animation: impactBoom 0.55s ease-out; }
+
+  .fs-hero.punch { animation: fsPunch 0.45s ease-in-out; }
+  @keyframes fsPunch {
+    0% { transform: translateX(0) scale(1) rotate(-3deg); }
+    45% { transform: translateX(55px) scale(1.28) rotate(10deg); }
+    100% { transform: translateX(0) scale(1) rotate(-3deg); }
+  }
+
+  .fs-enemy.recoil { animation: fsRecoil 0.45s ease-in-out; }
+  @keyframes fsRecoil {
+    0% { transform: scaleX(-1) translateX(0) rotate(0); filter: brightness(0.85); }
+    45% { transform: scaleX(-1) translateX(45px) rotate(-14deg); filter: brightness(3) saturate(0); }
+    100% { transform: scaleX(-1) translateX(0) rotate(0); }
+  }
+
+  .fs-hero.finisher { animation: fsFinisher 0.75s cubic-bezier(0.5,0,0.3,1); }
+  @keyframes fsFinisher {
+    0% { transform: translateX(-35vw) translateY(20px) scale(0.7) rotate(-12deg); }
+    50% { transform: translateX(-2vw) translateY(-10px) scale(1.7) rotate(8deg); }
+    66% { transform: translateX(4vw) translateY(0) scale(1.85) rotate(0deg); }
+    100% { transform: translateX(0) translateY(0) scale(1.1) rotate(-3deg); }
+  }
+
+  .fs-enemy.defeated { animation: enemyDefeat 1.1s ease-in-out forwards; }
+
+  /* ===== ENEMY INTRO SCREEN ===== */
+  #enemy-intro-screen {
+    background: radial-gradient(circle at 50% 35%, rgba(60,0,10,0.7), rgba(0,0,5,0.92));
+    backdrop-filter: blur(6px);
+    padding: 20px;
+  }
+  .ei-role {
+    color: #ff5577;
+    font-size: 13px;
+    letter-spacing: 2px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .ei-enemy {
+    font-size: clamp(90px, 28vw, 180px);
+    filter: drop-shadow(0 0 16px #ff0033) drop-shadow(0 0 30px #660000) contrast(1.3) brightness(0.88);
+    animation: villainLoom 2.2s ease-in-out infinite;
+    margin: 6px 0;
+  }
+  .ei-name {
+    font-size: clamp(28px, 8vw, 46px);
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 16px #ff0033, 0 0 30px #aa0000;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .ei-desc {
+    background: rgba(20,5,10,0.85);
+    border: 2px solid #aa0033;
+    border-radius: 18px;
+    padding: 14px 20px;
+    max-width: 420px;
+    width: 92%;
+    color: #ffdde0;
+    font-size: clamp(14px, 3.8vw, 18px);
+    line-height: 1.5;
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .ei-skill {
+    color: #ffd700;
+    font-size: 14px;
+    margin: 10px 0 16px;
+    font-weight: bold;
+  }
+  .btn-fight {
+    background: linear-gradient(135deg, #cc0033, #ff3355);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 44px;
+    font-size: clamp(18px, 5vw, 24px);
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(255,0,51,0.5);
+    animation: fightPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes fightPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  /* Sound toggle button */
+  #sound-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 60;
+    background: rgba(20,20,50,0.7);
+    border: 1px solid #4a4aaa;
+    color: #aaf;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
   .hp-bar-wrap {
     position: absolute;
     bottom: 70px;
@@ -862,6 +1000,7 @@
 
   <!-- Language Button -->
   <button id="lang-btn" onclick="toggleLang()">🌐 KZ</button>
+  <button id="sound-btn" onclick="toggleSound()">🔊</button>
 
   <!-- Screens -->
   <div id="menu-screen" class="screen">
@@ -884,6 +1023,16 @@
     <div class="level-title" id="choose-level-text">Выбери уровень</div>
     <div class="levels-grid" id="levels-grid"></div>
     <button class="back-btn" onclick="showMenu()" id="back-btn-text">← Назад</button>
+  </div>
+
+  <div id="enemy-intro-screen" class="screen hidden">
+    <div class="ei-role" id="ei-role">БАБАЙКА</div>
+    <div class="ei-enemy" id="ei-enemy">👹</div>
+    <div class="ei-name" id="ei-name">Имя</div>
+    <div class="ei-desc" id="ei-desc">Описание</div>
+    <div class="ei-skill" id="ei-skill">Задание</div>
+    <button class="btn-fight" onclick="beginLevelFromIntro()" id="ei-fight-btn">В бой! ⚔️</button>
+    <button class="back-btn" onclick="showLevelSelect()" id="ei-back-btn">← Назад</button>
   </div>
 
   <div id="game-screen" class="screen hidden">
@@ -911,6 +1060,13 @@
       <div class="hero-char" id="hero-char">🦸🏻‍♂️</div>
       <div class="impact-burst" id="impact-burst" style="left:50%;top:-20px">💥</div>
       <div class="enemy-char" id="enemy-char">👹</div>
+    </div>
+
+    <!-- Centered fight animation overlay -->
+    <div id="fight-stage">
+      <div class="fs-hero" id="fs-hero">🦸🏻‍♂️</div>
+      <div class="fs-burst" id="fs-burst">💥</div>
+      <div class="fs-enemy" id="fs-enemy">👹</div>
     </div>
   </div>
 
@@ -975,8 +1131,18 @@ const T = {
     finalWisdomTitle: 'СЛОВА УЧИТЕЛЯ',
     victory: '🎉 Победа!',
     lvlLabel: 'Уровень',
-    lvlNames: ['Бабай Счётовод','Бабай Буквоед','Бабай Путаник','Бабай Обманщик','Бабай Клоун'],
+    lvlNames: ['Мачмук','Учпек','Бэлла Хадид','Хашан','Клоун'],
     lvlDesc: ['Числа','Буквы','Математика','Логика','Пары'],
+    enemyRole: ['Младший сын бабайка','Старший сын бабайка','Мама бабайка','Папа бабайка','Главный злодей Чёрного города'],
+    enemyDesc: [
+      'Мачмук — самый маленький и вредный из бабаек. Он прячет цифры по тёмным углам, чтобы дети не научились считать. Собери числа по порядку — и Мачмук убежит!',
+      'Учпек — старший брат Мачмука. Хитрый и шумный, он путает все буквы, чтобы никто не умел читать. Составь слово правильно — и победишь его!',
+      'Бэлла Хадид — мама бабаек, модная и очень хитрая. Она запутывает детей сложными примерами. Реши задачки — и её чары рассеются!',
+      'Хашан — грозный папа бабаек. Он разводит беспорядок и обожает всё путать. Найди лишнее и наведи порядок — только так его одолеть!',
+      'Клоун — самый главный и страшный бабайка Чёрного города. Он повелевает всеми остальными. Победишь его — и город снова станет светлым!',
+    ],
+    meetTitle: 'Перед тобой...',
+    fightBtn: 'В бой! ⚔️',
     task1: 'Нажимай числа по порядку от 1 до ',
     task2_pre: 'Составь слово: ',
     task2_pick: 'Найди буквы слова ',
@@ -1015,8 +1181,18 @@ const T = {
     finalWisdomTitle: 'ҰСТАЗ СӨЗІ',
     victory: '🎉 Жеңіс!',
     lvlLabel: 'Деңгей',
-    lvlNames: ['Санаушы Кикімок','Әріп Кикімок','Шатастырушы','Алдаушы Кикімок','Клоун Кикімок'],
+    lvlNames: ['Мачмук','Учпек','Бэлла Хадид','Хашан','Клоун'],
     lvlDesc: ['Сандар','Әріптер','Математика','Логика','Жұптар'],
+    enemyRole: ['Кіші ұл кикімок','Үлкен ұл кикімок','Ана кикімок','Әке кикімок','Қара қаланың басты зұлымы'],
+    enemyDesc: [
+      'Мачмук — кикімоктардың ең кішкентай әрі қыңыр баласы. Балалар санай білмесін деп сандарды қараңғы бұрыштарға тығады. Сандарды ретімен жина — Мачмук қашып кетеді!',
+      'Учпек — Мачмуктың ағасы. Қу әрі шулы, ол ешкім оқи алмасын деп әріптерді шатастырады. Сөзді дұрыс құрастыр — оны жеңесің!',
+      'Бэлла Хадид — кикімоктардың анасы, сәнді әрі өте қу. Ол балаларды күрделі мысалдармен шатастырады. Есептерді шеш — сиқыры тарайды!',
+      'Хашан — кикімоктардың айбарлы әкесі. Ол бәрін былықтырып, шатастырғанды жақсы көреді. Артықты тауып, тәртіп орнат — сонда ғана жеңесің!',
+      'Клоун — Қара қаланың ең басты әрі ең қорқынышты кикімогі. Ол бәрін билейді. Оны жеңсең — қала қайтадан жарық болады!',
+    ],
+    meetTitle: 'Сенің алдыңда...',
+    fightBtn: 'Шайқасқа! ⚔️',
     task1: 'Сандарды ретімен бас: 1-ден ',
     task2_pre: 'Сөз жаса: ',
     task2_pick: 'Сөздің әріптерін тап ',
@@ -1045,8 +1221,8 @@ function t(key) { return T[lang][key]; }
 // ============================================================
 // GAME STATE
 // ============================================================
-const LEVEL_ENEMIES = ['👹','👺','🧟‍♂️','💀','🤡'];
-const LEVEL_ENEMY_NAMES_RU = ['Бабай Счётовод','Бабай Буквоед','Бабай Путаник','Бабай Обманщик','Бабай Клоун'];
+const LEVEL_ENEMIES = ['👺','👹','🧛‍♀️','👿','🤡'];
+const LEVEL_ENEMY_NAMES_RU = ['Мачмук','Учпек','Бэлла Хадид','Хашан','Клоун'];
 const LEVEL_ICONS = ['🔢','🔤','➕','🧩','🃏'];
 
 let state = {
@@ -1191,15 +1367,129 @@ function stopSpeech() {
 }
 
 // ============================================================
+// SOUND (Web Audio API) — ambient + effects, no files needed
+// ============================================================
+let actx = null, ambientNodes = null, soundOn = true;
+
+function ensureAudio() {
+  if (!actx) {
+    try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { actx = null; }
+  }
+  if (actx && actx.state === 'suspended') actx.resume();
+}
+
+// Spooky low ambient drone of the Dark City
+function startAmbient() {
+  ensureAudio();
+  if (!actx || ambientNodes || !soundOn) return;
+  const master = actx.createGain();
+  master.gain.value = 0.0001;
+  master.connect(actx.destination);
+
+  const o1 = actx.createOscillator(); o1.type = 'sine';     o1.frequency.value = 55;    // low A
+  const o2 = actx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = 82.4;  // E
+  const o3 = actx.createOscillator(); o3.type = 'sine';     o3.frequency.value = 110;   // soft overtone
+  const g = actx.createGain(); g.gain.value = 0.05;
+  o1.connect(g); o2.connect(g); o3.connect(g); g.connect(master);
+
+  // Slow eerie wobble
+  const lfo = actx.createOscillator(); lfo.frequency.value = 0.1;
+  const lfoGain = actx.createGain(); lfoGain.gain.value = 6;
+  lfo.connect(lfoGain); lfoGain.connect(o2.frequency);
+
+  o1.start(); o2.start(); o3.start(); lfo.start();
+  master.gain.linearRampToValueAtTime(0.45, actx.currentTime + 2.5);
+  ambientNodes = { master, o1, o2, o3, lfo };
+}
+
+function stopAmbient() {
+  if (!ambientNodes || !actx) return;
+  const { master, o1, o2, o3, lfo } = ambientNodes;
+  try {
+    master.gain.cancelScheduledValues(actx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, actx.currentTime);
+    master.gain.linearRampToValueAtTime(0.0001, actx.currentTime + 0.6);
+    setTimeout(() => { try { o1.stop(); o2.stop(); o3.stop(); lfo.stop(); } catch(e){} }, 700);
+  } catch(e) {}
+  ambientNodes = null;
+}
+
+// Punch / hit sound: filtered noise + low thump
+function sfxPunch() {
+  ensureAudio();
+  if (!actx || !soundOn) return;
+  const t = actx.currentTime;
+  const buf = actx.createBuffer(1, Math.floor(actx.sampleRate * 0.15), actx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1) * Math.pow(1 - i/d.length, 2);
+  const src = actx.createBufferSource(); src.buffer = buf;
+  const f = actx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+  const g = actx.createGain(); g.gain.value = 0.35;
+  src.connect(f); f.connect(g); g.connect(actx.destination); src.start();
+
+  const o = actx.createOscillator();
+  o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.15);
+  const og = actx.createGain();
+  og.gain.setValueAtTime(0.45, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  o.connect(og); og.connect(actx.destination); o.start(t); o.stop(t + 0.2);
+}
+
+// Bigger boom for the finishing blow
+function sfxBigHit() {
+  ensureAudio();
+  if (!actx || !soundOn) return;
+  sfxPunch();
+  const t = actx.currentTime;
+  const o = actx.createOscillator(); o.type = 'sawtooth';
+  o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(30, t + 0.5);
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+  o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.6);
+}
+
+// Triumphant little fanfare on level complete
+function sfxVictory() {
+  ensureAudio();
+  if (!actx || !soundOn) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5]; // C E G C
+  const t0 = actx.currentTime + 0.05;
+  notes.forEach((freq, i) => {
+    const o = actx.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
+    const g = actx.createGain();
+    const t = t0 + i * 0.13;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.28, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.37);
+  });
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('sound-btn').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) {
+    // resume ambient if we're mid-game
+    if (!document.getElementById('game-screen').classList.contains('hidden') ||
+        !document.getElementById('enemy-intro-screen').classList.contains('hidden') ||
+        !document.getElementById('intro-screen').classList.contains('hidden')) {
+      startAmbient();
+    }
+  } else {
+    stopAmbient();
+    stopSpeech();
+  }
+}
+
+// ============================================================
 // SCREEN NAV
 // ============================================================
 function showScreen(id) {
-  ['menu-screen','intro-screen','level-screen','game-screen','victory-screen','gameover-screen','final-screen']
+  ['menu-screen','intro-screen','level-screen','enemy-intro-screen','game-screen','victory-screen','gameover-screen','final-screen']
     .forEach(s => document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
 
-function showMenu() { stopSpeech(); showScreen('menu-screen'); }
+function showMenu() { stopSpeech(); stopAmbient(); showScreen('menu-screen'); }
 
 let introSeen = false;
 
@@ -1212,6 +1502,8 @@ function showLevelSelect() {
 
 function showIntro() {
   showScreen('intro-screen');
+  ensureAudio();   // first user gesture — unlock audio
+  startAmbient();
   // Slight delay so voices are loaded & screen is visible
   setTimeout(() => speak(t('introSpeech'), { rate: 0.88, pitch: 0.8 }), 350);
 }
@@ -1239,9 +1531,34 @@ function renderLevelSelect() {
       <div class="lv-name">${t('lvlDesc')[i]}</div>
       <div class="lv-stars">${state.completed[i] ? stars : (isLocked ? '' : '☆☆☆')}</div>
     `;
-    if (!isLocked) card.onclick = () => startLevel(i);
+    if (!isLocked) card.onclick = () => showEnemyIntro(i);
     grid.appendChild(card);
   }
+}
+
+// ============================================================
+// ENEMY INTRO (presented before each level)
+// ============================================================
+let pendingLevel = 0;
+
+function showEnemyIntro(levelIdx) {
+  pendingLevel = levelIdx;
+  stopSpeech();
+  startAmbient();
+  document.getElementById('ei-role').textContent = t('enemyRole')[levelIdx];
+  document.getElementById('ei-enemy').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('ei-name').textContent = t('lvlNames')[levelIdx];
+  document.getElementById('ei-desc').textContent = t('enemyDesc')[levelIdx];
+  document.getElementById('ei-skill').textContent = '🎯 ' + t('lvlDesc')[levelIdx];
+  document.getElementById('ei-fight-btn').textContent = t('fightBtn');
+  document.getElementById('ei-back-btn').textContent = t('back');
+  showScreen('enemy-intro-screen');
+  // Teacher introduces the enemy aloud
+  setTimeout(() => speak(t('enemyRole')[levelIdx] + '. ' + t('enemyDesc')[levelIdx]), 400);
+}
+
+function beginLevelFromIntro() {
+  startLevel(pendingLevel);
 }
 
 // ============================================================
@@ -1340,6 +1657,7 @@ function generateMemory() {
 // ============================================================
 function startLevel(levelIdx) {
   stopSpeech();
+  startAmbient();
   state.currentLevel = levelIdx;
   state.lives = 3;
   state.score = 0;
@@ -1356,6 +1674,13 @@ function startLevel(levelIdx) {
   document.getElementById('enemy-char').textContent = LEVEL_ENEMIES[levelIdx];
   document.getElementById('enemy-char').className = 'enemy-char';
   document.getElementById('hero-char').className = 'hero-char';
+  // Reset centered fight stage
+  document.getElementById('fs-enemy').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('fs-enemy').className = 'fs-enemy';
+  document.getElementById('fs-hero').className = 'fs-hero';
+  document.getElementById('fight-stage').classList.remove('active');
+  document.getElementById('task-area').style.opacity = '';
+  document.getElementById('hp-bar-wrap').style.display = '';
 }
 
 function renderHUD() {
@@ -1601,78 +1926,90 @@ function hitEnemy() {
   if (state.enemyHP <= 0) {
     playFinisher();
   } else {
-    // Regular hit — hero lunges, enemy recoils
-    const hero = document.getElementById('hero-char');
-    const enemy = document.getElementById('enemy-char');
+    // Regular hit — centered clash
+    const stage = document.getElementById('fight-stage');
+    const fsHero = document.getElementById('fs-hero');
+    const fsEnemy = document.getElementById('fs-enemy');
     const light = document.getElementById('lightning');
-    light.classList.add('flash');
-    setTimeout(() => light.classList.remove('flash'), 500);
-    hero.className = 'hero-char attacking';
+
+    stage.classList.add('active');
+    fsHero.className = 'fs-hero'; fsEnemy.className = 'fs-enemy';
+    void fsHero.offsetWidth;
+    fsHero.classList.add('punch');
     setTimeout(() => {
-      enemy.classList.add('hit');
-      popImpact('💢');
-    }, 250);
-    setTimeout(() => { hero.className = 'hero-char'; enemy.classList.remove('hit'); }, 700);
+      fsEnemy.classList.add('recoil');
+      fsBurst(['👊','💢','💥'][rand(0,2)]);
+      light.classList.add('flash');
+      sfxPunch();
+      setTimeout(() => light.classList.remove('flash'), 250);
+    }, 200);
+    setTimeout(() => { stage.classList.remove('active'); }, 700);
 
     // More hits needed — new sub-task
     state.taskData = generateTask(state.currentLevel);
-    setTimeout(() => renderTask(), 750);
+    setTimeout(() => renderTask(), 760);
   }
 }
 
-// Big cinematic finishing fight sequence
+// Big cinematic finishing fight sequence — happens in the CENTER of the screen
 function playFinisher() {
-  const hero = document.getElementById('hero-char');
-  const enemy = document.getElementById('enemy-char');
+  const stage = document.getElementById('fight-stage');
+  const fsHero = document.getElementById('fs-hero');
+  const fsEnemy = document.getElementById('fs-enemy');
   const light = document.getElementById('lightning');
   const gameScreen = document.getElementById('game-screen');
 
-  // Clear the task area so the fight has the spotlight
+  // Clear the task area so the fight takes the spotlight
   document.getElementById('task-area').style.opacity = '0';
   document.getElementById('hp-bar-wrap').style.display = 'none';
+  stage.classList.add('active');
+  fsHero.className = 'fs-hero'; fsEnemy.className = 'fs-enemy';
 
-  // Hit 1 — combo of quick jabs
+  // Combo of quick jabs
   let jabs = 0;
   const jabEmojis = ['👊','💢','⚡','💥'];
   const jabInterval = setInterval(() => {
-    enemy.classList.remove('hit');
-    void enemy.offsetWidth;
-    enemy.classList.add('hit');
-    popImpact(jabEmojis[jabs % jabEmojis.length]);
+    fsEnemy.classList.remove('recoil'); void fsEnemy.offsetWidth;
+    fsEnemy.classList.add('recoil');
+    fsHero.classList.remove('punch'); void fsHero.offsetWidth;
+    fsHero.classList.add('punch');
+    fsBurst(jabEmojis[jabs % jabEmojis.length]);
     light.classList.add('flash');
+    sfxPunch();
     setTimeout(() => light.classList.remove('flash'), 150);
     jabs++;
     if (jabs >= 3) {
       clearInterval(jabInterval);
-      // The big finisher leap + punch
+      // The big finishing leap + punch (centered)
       setTimeout(() => {
-        hero.className = 'hero-char finisher';
+        fsHero.className = 'fs-hero finisher';
         setTimeout(() => {
-          // Impact moment
           gameScreen.classList.add('shake-hard');
-          popImpact('💥');
+          fsBurst('💥');
           light.classList.add('flash');
-          enemy.classList.add('defeated');
+          sfxBigHit();
+          fsEnemy.className = 'fs-enemy defeated';
           setTimeout(() => gameScreen.classList.remove('shake-hard'), 500);
           setTimeout(() => light.classList.remove('flash'), 500);
-        }, 600);
-        setTimeout(() => { hero.className = 'hero-char'; }, 1200);
+        }, 550);
+        setTimeout(() => { fsHero.className = 'fs-hero'; }, 1300);
       }, 250);
       // Show victory after the whole scene plays out
       setTimeout(() => {
+        stage.classList.remove('active');
         document.getElementById('task-area').style.opacity = '';
         showVictory();
-      }, 2200);
+      }, 2300);
     }
-  }, 220);
+  }, 230);
 }
 
-function popImpact(emoji) {
-  const burst = document.getElementById('impact-burst');
+function fsBurst(emoji) {
+  const burst = document.getElementById('fs-burst');
   burst.textContent = emoji;
-  burst.className = 'impact-burst';
+  burst.className = 'fs-burst';
   void burst.offsetWidth;
-  burst.className = 'impact-burst boom';
+  burst.className = 'fs-burst boom';
 }
 
 function onMistake() {
@@ -1703,8 +2040,9 @@ function showVictory() {
   document.getElementById('next-btn-text').textContent = isLast ? (lang==='ru'?'🏆 Финал!':'🏆 Финал!') : t('next');
 
   showScreen('victory-screen');
+  sfxVictory();
   // Teacher speaks the wisdom aloud
-  setTimeout(() => speak(t('wisdoms')[state.currentLevel]), 600);
+  setTimeout(() => speak(t('wisdoms')[state.currentLevel]), 900);
 }
 
 function showGameOver() {
@@ -1717,7 +2055,7 @@ function nextLevel() {
   if (state.currentLevel === 4) {
     showFinalScreen();
   } else {
-    startLevel(state.currentLevel + 1);
+    showEnemyIntro(state.currentLevel + 1);
   }
 }
 
@@ -1726,10 +2064,12 @@ function retryLevel() {
 }
 
 function showFinalScreen() {
+  stopAmbient();
   document.getElementById('final-title').innerHTML = t('finalTitle').replace('\n','<br>');
   document.getElementById('final-wisdom-text').textContent = t('finalWisdom');
   showScreen('final-screen');
-  setTimeout(() => speak(t('finalWisdom'), { rate: 0.9 }), 700);
+  sfxVictory();
+  setTimeout(() => speak(t('finalWisdom'), { rate: 0.9 }), 900);
 }
 
 // ============================================================
