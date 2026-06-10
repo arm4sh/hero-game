@@ -196,9 +196,9 @@
   }
 
   .intro-villain {
-    font-size: clamp(40px, 11vw, 70px);
+    font-size: clamp(48px, 13vw, 80px);
     margin-bottom: 18px;
-    filter: drop-shadow(0 0 12px #ff0033) contrast(1.3) brightness(0.85);
+    filter: drop-shadow(0 0 14px rgba(255,0,51,0.7));
     animation: villainLoom 2.5s ease-in-out infinite;
   }
 
@@ -459,7 +459,7 @@
     font-size: clamp(40px, 10vw, 62px);
     animation: enemyIdle 1.4s ease-in-out infinite;
     position: relative;
-    filter: drop-shadow(0 0 8px #ff0033) drop-shadow(0 0 18px #660000) hue-rotate(-15deg) contrast(1.3) brightness(0.85);
+    filter: drop-shadow(0 0 9px rgba(255,0,51,0.7)) drop-shadow(0 4px 6px rgba(0,0,0,0.5));
   }
 
   /* Creepy red aura behind enemy */
@@ -473,30 +473,9 @@
     animation: auraPulse 1.5s ease-in-out infinite;
   }
 
-  /* Glowing evil eyes */
-  .enemy-char::after {
-    content: '👁👁';
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%,-50%) scaleX(-1);
-    font-size: 0.32em;
-    letter-spacing: -2px;
-    filter: drop-shadow(0 0 4px #ff0000) brightness(1.5) sepia(1) saturate(8) hue-rotate(-30deg);
-    opacity: 0.9;
-    animation: eyeFlicker 0.18s steps(2) infinite;
-    pointer-events: none;
-  }
-
   @keyframes auraPulse {
     0%, 100% { opacity: 0.5; transform: scale(0.9); }
     50% { opacity: 1; transform: scale(1.15); }
-  }
-
-  @keyframes eyeFlicker {
-    0% { opacity: 0.9; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
   }
 
   @keyframes enemyIdle {
@@ -594,7 +573,7 @@
   .fs-enemy {
     font-size: clamp(70px, 22vw, 150px);
     transform: scaleX(-1);
-    filter: drop-shadow(0 0 12px #ff0033) drop-shadow(0 0 22px #660000) contrast(1.3) brightness(0.85);
+    filter: drop-shadow(0 0 14px rgba(255,0,51,0.75)) drop-shadow(0 6px 10px rgba(0,0,0,0.5));
   }
   .fs-burst {
     position: absolute;
@@ -646,7 +625,7 @@
   }
   .ei-enemy {
     font-size: clamp(90px, 28vw, 180px);
-    filter: drop-shadow(0 0 16px #ff0033) drop-shadow(0 0 30px #660000) contrast(1.3) brightness(0.88);
+    filter: drop-shadow(0 0 18px rgba(255,0,51,0.7)) drop-shadow(0 8px 12px rgba(0,0,0,0.55));
     animation: villainLoom 2.2s ease-in-out infinite;
     margin: 6px 0;
   }
@@ -764,7 +743,12 @@
     font-size: clamp(50px, 14vw, 90px);
     margin: 10px 0;
     animation: battleScene 1.5s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
+  .victory-battle .vb-enemy { filter: drop-shadow(0 0 10px rgba(255,0,51,0.7)); }
 
   @keyframes battleScene {
     0%, 100% { transform: scale(1); }
@@ -1004,17 +988,17 @@
 
   <!-- Screens -->
   <div id="menu-screen" class="screen">
-    <div class="hero-display">🦸🏻‍♂️</div>
+    <div class="hero-display" id="menu-hero"></div>
     <div class="game-title" id="title-text">ГЕРОЙ<br>ТЁМНОГО ГОРОДА</div>
     <div class="subtitle" id="subtitle-text">Помоги супергерою победить всех бабаек!</div>
     <button class="btn-play" onclick="showLevelSelect()" id="play-btn-text">▶ ИГРАТЬ</button>
   </div>
 
   <div id="intro-screen" class="screen hidden">
-    <div class="intro-teacher" id="intro-teacher">👨‍🏫</div>
+    <div class="intro-teacher" id="intro-teacher"></div>
     <div class="wisdom-title" id="intro-label">УЧИТЕЛЬ ГОВОРИТ</div>
     <div class="intro-speech" id="intro-speech"></div>
-    <div class="intro-villain">🤡</div>
+    <div class="intro-villain" id="intro-villain"></div>
     <button class="btn-play" onclick="finishIntro()" id="intro-btn">Я готов! ⚔️</button>
     <button class="back-btn" onclick="replayIntro()" id="intro-replay">🔊 Повторить</button>
   </div>
@@ -1092,7 +1076,7 @@
 
   <div id="final-screen" class="screen hidden">
     <div class="final-title" id="final-title">🏆 ТЫ ПОБЕДИЛ<br>ВСЕХ БАБАЕК! 🏆</div>
-    <div class="final-hero">🦸🏻‍♂️🌟</div>
+    <div class="final-hero" id="final-hero"></div>
     <div class="final-wisdom-box">
       <div class="wisdom-teacher" style="font-size:36px">👨‍🏫</div>
       <div class="wisdom-title" id="final-wisdom-title">СЛОВА УЧИТЕЛЯ</div>
@@ -1225,6 +1209,161 @@ const LEVEL_ENEMIES = ['👺','👹','🧛‍♀️','👿','🤡'];
 const LEVEL_ENEMY_NAMES_RU = ['Мачмук','Учпек','Бэлла Хадид','Хашан','Клоун'];
 const LEVEL_ICONS = ['🔢','🔤','➕','🧩','🃏'];
 
+// ============================================================
+// CHARACTER ART (inline SVG — flat fills, no shared IDs so multiple
+// instances render correctly on the same screen). Sized with 1em so the
+// existing font-size clamps control how big each character appears.
+// ============================================================
+const SVG_OPEN = '<svg viewBox="0 0 120 120" style="width:1em;height:1em;display:block;overflow:visible">';
+
+// Light-skinned boy superhero: dark hair, blue mask & cape, red suit, star
+const HERO_SVG = SVG_OPEN + `
+  <path d="M34 56 Q16 92 28 112 L52 100 Q42 78 46 58 Z" fill="#1746a8"/>
+  <path d="M86 56 Q104 92 92 112 L68 100 Q78 78 74 58 Z" fill="#1b56c9"/>
+  <rect x="49" y="92" width="10" height="20" rx="4" fill="#15306e"/>
+  <rect x="61" y="92" width="10" height="20" rx="4" fill="#15306e"/>
+  <rect x="46" y="106" width="15" height="9" rx="3" fill="#c81e2d"/>
+  <rect x="59" y="106" width="15" height="9" rx="3" fill="#c81e2d"/>
+  <path d="M40 62 Q60 52 80 62 L77 96 Q60 102 43 96 Z" fill="#e02335"/>
+  <path d="M40 62 Q60 52 80 62 L78 70 Q60 62 42 70 Z" fill="#f0394b"/>
+  <rect x="30" y="62" width="11" height="27" rx="5" fill="#e02335" transform="rotate(14 35 75)"/>
+  <rect x="79" y="62" width="11" height="27" rx="5" fill="#e02335" transform="rotate(-14 85 75)"/>
+  <circle cx="31" cy="88" r="6.5" fill="#f6d2ab"/>
+  <circle cx="89" cy="88" r="6.5" fill="#f6d2ab"/>
+  <path d="M60 70 l4.4 8.6 9.5 1 -6.9 6.6 1.9 9.4 -8.9 -4.9 -8.9 4.9 1.9 -9.4 -6.9 -6.6 9.5 -1 z" fill="#ffd83d"/>
+  <rect x="53" y="47" width="14" height="13" fill="#f6d2ab"/>
+  <circle cx="60" cy="37" r="21" fill="#f8d4af"/>
+  <path d="M38 36 Q37 12 60 12 Q83 12 82 36 Q74 24 60 27 Q46 24 38 36 Z" fill="#2a1c12"/>
+  <path d="M40 33 Q60 26 80 33 Q80 43 71 45 Q60 42 49 45 Q40 43 40 33 Z" fill="#1b56c9"/>
+  <ellipse cx="51" cy="37" rx="3" ry="3.4" fill="#fff"/>
+  <ellipse cx="69" cy="37" rx="3" ry="3.4" fill="#fff"/>
+  <circle cx="51.5" cy="37.6" r="1.6" fill="#23304a"/>
+  <circle cx="69.5" cy="37.6" r="1.6" fill="#23304a"/>
+  <path d="M52 49 Q60 55 68 49" stroke="#a9543a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>`;
+
+// Kind old teacher: glasses, grey beard, cardigan, holding a book
+const TEACHER_SVG = SVG_OPEN + `
+  <rect x="40" y="70" width="40" height="42" rx="12" fill="#5a4633"/>
+  <rect x="55" y="70" width="10" height="42" fill="#6b5640"/>
+  <circle cx="60" cy="44" r="22" fill="#f0cba6"/>
+  <path d="M38 40 Q40 18 60 18 Q80 18 82 40 Q74 30 60 32 Q46 30 38 40 Z" fill="#c9c9d2"/>
+  <path d="M44 52 Q60 92 76 52 Q70 70 60 70 Q50 70 44 52 Z" fill="#d8d8de"/>
+  <circle cx="51" cy="44" r="6" fill="#fff" opacity="0.9"/>
+  <circle cx="69" cy="44" r="6" fill="#fff" opacity="0.9"/>
+  <circle cx="51" cy="44" r="6" fill="none" stroke="#3a3a3a" stroke-width="1.6"/>
+  <circle cx="69" cy="44" r="6" fill="none" stroke="#3a3a3a" stroke-width="1.6"/>
+  <line x1="57" y1="44" x2="63" y2="44" stroke="#3a3a3a" stroke-width="1.6"/>
+  <circle cx="51" cy="44" r="2.2" fill="#33415c"/>
+  <circle cx="69" cy="44" r="2.2" fill="#33415c"/>
+  <path d="M53 56 Q60 60 67 56" stroke="#9c6b4a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <rect x="64" y="84" width="30" height="22" rx="3" fill="#caa24a" transform="rotate(-8 79 95)"/>
+  <rect x="66" y="86" width="26" height="18" rx="2" fill="#fff" transform="rotate(-8 79 95)"/>
+</svg>`;
+
+// Мачмук — small red imp boy: little horns, big yellow eyes, fangs, cheeky
+const MACHMUK_SVG = SVG_OPEN + `
+  <ellipse cx="60" cy="86" rx="24" ry="22" fill="#b81b1b"/>
+  <path d="M40 84 Q28 88 26 100 Q34 96 42 96 Z" fill="#9c1414"/>
+  <path d="M80 84 Q92 88 94 100 Q86 96 78 96 Z" fill="#9c1414"/>
+  <circle cx="60" cy="48" r="30" fill="#d62525"/>
+  <path d="M40 26 L33 6 L49 22 Z" fill="#7a0f0f"/>
+  <path d="M80 26 L87 6 L71 22 Z" fill="#7a0f0f"/>
+  <path d="M38 35 Q47 39 56 41" stroke="#5e0a0a" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+  <path d="M82 35 Q73 39 64 41" stroke="#5e0a0a" stroke-width="3.4" stroke-linecap="round" fill="none"/>
+  <ellipse cx="50" cy="47" rx="8.5" ry="9.5" fill="#ffe14d"/>
+  <ellipse cx="70" cy="47" rx="8.5" ry="9.5" fill="#ffe14d"/>
+  <circle cx="51" cy="49" r="3.6" fill="#160000"/>
+  <circle cx="69" cy="49" r="3.6" fill="#160000"/>
+  <path d="M46 62 Q60 74 74 62 Q60 67 46 62 Z" fill="#2a0000"/>
+  <path d="M50 63 l3 7 3 -7 z" fill="#fff"/>
+  <path d="M70 63 l-3 7 -3 -7 z" fill="#fff"/>
+</svg>`;
+
+// Учпек — older green goblin brother: big ears, bucktooth, bigger build
+const UCHPEK_SVG = SVG_OPEN + `
+  <ellipse cx="60" cy="88" rx="28" ry="22" fill="#3c7a30"/>
+  <circle cx="60" cy="50" r="32" fill="#4d9a3d"/>
+  <path d="M30 48 L14 38 L30 64 Z" fill="#3c7a30"/>
+  <path d="M90 48 L106 38 L90 64 Z" fill="#3c7a30"/>
+  <path d="M36 36 Q47 40 56 44" stroke="#234d1b" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+  <path d="M84 36 Q73 40 64 44" stroke="#234d1b" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+  <ellipse cx="49" cy="49" rx="9" ry="10" fill="#fff4c4"/>
+  <ellipse cx="71" cy="49" rx="9" ry="10" fill="#fff4c4"/>
+  <circle cx="50" cy="51" r="4" fill="#1a2a00"/>
+  <circle cx="70" cy="51" r="4" fill="#1a2a00"/>
+  <ellipse cx="60" cy="62" rx="5" ry="4" fill="#356b29"/>
+  <path d="M44 70 Q60 82 76 70 Q60 76 44 70 Z" fill="#1f3d18"/>
+  <rect x="55" y="71" width="5" height="9" rx="1" fill="#fff"/>
+  <rect x="61" y="71" width="5" height="9" rx="1" fill="#fff"/>
+</svg>`;
+
+// Бэлла Хадид — mom boogeyman: pale skin, long black hair, red lips, fangs, lashes
+const BELLA_SVG = SVG_OPEN + `
+  <path d="M30 40 Q24 96 36 116 L48 100 Q42 70 44 44 Z" fill="#15121c"/>
+  <path d="M90 40 Q96 96 84 116 L72 100 Q78 70 76 44 Z" fill="#15121c"/>
+  <path d="M44 70 Q60 78 76 70 L74 104 Q60 110 46 104 Z" fill="#3a2540"/>
+  <circle cx="60" cy="46" r="24" fill="#cfe0d2"/>
+  <path d="M34 44 Q32 14 60 14 Q88 14 86 44 Q80 22 60 24 Q40 22 34 44 Z" fill="#0e0b14"/>
+  <path d="M36 40 Q30 70 40 92 L46 80 Q40 60 42 42 Z" fill="#0e0b14"/>
+  <path d="M84 40 Q90 70 80 92 L74 80 Q80 60 78 42 Z" fill="#0e0b14"/>
+  <path d="M42 42 Q49 36 56 42" stroke="#15121c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M64 42 Q71 36 78 42" stroke="#15121c" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="50" cy="48" rx="6" ry="7" fill="#fff"/>
+  <ellipse cx="70" cy="48" rx="6" ry="7" fill="#fff"/>
+  <circle cx="50" cy="49" r="3.4" fill="#5a1030"/>
+  <circle cx="70" cy="49" r="3.4" fill="#5a1030"/>
+  <path d="M43 45 Q50 41 57 45" stroke="#15121c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M63 45 Q70 41 77 45" stroke="#15121c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M48 60 Q60 70 72 60 Q60 66 48 60 Z" fill="#b3123f"/>
+  <path d="M48 60 Q60 64 72 60" stroke="#7a0a29" stroke-width="1.5" fill="none"/>
+  <path d="M53 62 l2 5 2 -5 z" fill="#fff"/>
+  <path d="M67 62 l-2 5 -2 -5 z" fill="#fff"/>
+</svg>`;
+
+// Хашан — big dark dad brute: charcoal-purple, horns, beard, heavy brows, fangs
+const HASHAN_SVG = SVG_OPEN + `
+  <path d="M28 96 Q26 70 36 64 L84 64 Q94 70 92 96 Q60 108 28 96 Z" fill="#352a4a"/>
+  <circle cx="60" cy="50" r="33" fill="#473860"/>
+  <path d="M30 34 Q20 14 14 6 Q34 12 40 30 Z" fill="#241b36"/>
+  <path d="M90 34 Q100 14 106 6 Q86 12 80 30 Z" fill="#241b36"/>
+  <path d="M34 40 Q47 34 57 42" stroke="#1c1530" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M86 40 Q73 34 63 42" stroke="#1c1530" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <ellipse cx="49" cy="50" rx="8" ry="7" fill="#ff5a2a"/>
+  <ellipse cx="71" cy="50" rx="8" ry="7" fill="#ff5a2a"/>
+  <circle cx="49" cy="50" r="3.2" fill="#2a0a00"/>
+  <circle cx="71" cy="50" r="3.2" fill="#2a0a00"/>
+  <path d="M40 70 Q60 78 80 70 Q74 96 60 98 Q46 96 40 70 Z" fill="#1c1530"/>
+  <path d="M40 70 Q60 76 80 70 L76 76 Q60 82 44 76 Z" fill="#2a2042"/>
+  <path d="M48 71 l3 8 3 -8 z" fill="#fff"/>
+  <path d="M66 71 l3 8 3 -8 z" fill="#fff"/>
+</svg>`;
+
+// Клоун — creepy boss clown: white face, red nose, colorful hair, jagged grin, ruff
+const CLOWN_SVG = SVG_OPEN + `
+  <path d="M30 96 Q24 80 38 78 L82 78 Q96 80 90 96 Q60 104 30 96 Z" fill="#7a1530"/>
+  <ellipse cx="60" cy="92" rx="34" ry="9" fill="#b51d44"/>
+  <circle cx="60" cy="52" r="30" fill="#f3eee8"/>
+  <path d="M30 44 Q20 22 14 30 Q22 40 26 52 Z" fill="#e23b3b"/>
+  <path d="M90 44 Q100 22 106 30 Q98 40 94 52 Z" fill="#2ea84d"/>
+  <path d="M32 34 Q42 16 52 28 Q44 30 38 42 Z" fill="#e6a31e"/>
+  <path d="M88 34 Q78 16 68 28 Q76 30 82 42 Z" fill="#2f7fd0"/>
+  <path d="M40 32 Q60 20 80 32 Q60 30 40 32 Z" fill="#d63bb0"/>
+  <path d="M40 40 Q47 35 54 40" stroke="#1a1a1a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M66 40 Q73 35 80 40" stroke="#1a1a1a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M44 44 l8 10 -16 0 z" fill="#1a1a1a"/>
+  <path d="M76 44 l-8 10 16 0 z" fill="#1a1a1a"/>
+  <path d="M44 46 l3 4 -6 0 z" fill="#c01030"/>
+  <path d="M76 46 l-3 4 6 0 z" fill="#c01030"/>
+  <circle cx="60" cy="58" r="7" fill="#e0182f"/>
+  <circle cx="58" cy="56" r="2.4" fill="#ff7a88"/>
+  <path d="M40 66 Q60 88 80 66 Q70 76 60 76 Q50 76 40 66 Z" fill="#9c0a22"/>
+  <path d="M40 66 Q60 74 80 66" stroke="#fff" stroke-width="3" fill="none"/>
+  <path d="M44 68 l4 6 4 -6 z M54 70 l3 6 3 -6 z M64 70 l3 6 3 -6 z" fill="#fff"/>
+</svg>`;
+
+const ENEMY_SVG = [MACHMUK_SVG, UCHPEK_SVG, BELLA_SVG, HASHAN_SVG, CLOWN_SVG];
+
 let state = {
   currentLevel: 0,
   lives: 3,
@@ -1324,42 +1463,59 @@ function updateTexts() {
 // SPEECH (Web Speech API)
 // ============================================================
 // Known male voice names by platform (macOS / Windows / Google / Siri)
-const MALE_VOICE_HINTS = ['yuri','pavel','dmitri','artem','aleksandr','maxim','ru-ru-wavenet-b','ru-ru-wavenet-d','ru-ru-standard-b','ru-ru-standard-d','google русский','microsoft pavel','microsoft dmitry','siri','milos','daniel'];
-const FEMALE_VOICE_HINTS = ['milena','katya','tatyana','alyona','svetlana','irina','elena','wavenet-a','wavenet-c','standard-a','standard-c','female','женск'];
+const MALE_VOICE_HINTS = ['yuri','pavel','dmitri','dmitry','artem','aleksandr','maxim','ru-ru-wavenet-b','ru-ru-wavenet-d','ru-ru-standard-b','ru-ru-standard-d','microsoft pavel','microsoft dmitry','milos','daniel','grandpa','eddy'];
+const FEMALE_VOICE_HINTS = ['milena','katya','katja','tatyana','alyona','svetlana','irina','elena','wavenet-a','wavenet-c','standard-a','standard-c','female','женск','samantha','zira',' female'];
 
-function pickMaleVoice(langPrefix) {
+// Score a voice for "natural male" quality — higher is better
+function scoreVoice(v) {
+  const n = v.name.toLowerCase();
+  let s = 0;
+  if (MALE_VOICE_HINTS.some(h => n.includes(h))) s += 50;
+  if (/siri/.test(n)) s += 45;            // Siri voices are the most natural on Apple
+  if (/google/.test(n)) s += 35;          // Google voices are very natural on Chrome/Android
+  if (/premium|enhanced|natural|neural|wavenet/.test(n)) s += 28;
+  if (v.localService === false) s += 12;  // cloud voices usually sound better
+  if (FEMALE_VOICE_HINTS.some(h => n.includes(h))) s -= 70;
+  if (/compact|eloquence|espeak|fred|albert|zarvox/.test(n)) s -= 30; // robotic ones
+  return s;
+}
+
+function pickBestVoice(langPrefix) {
   const voices = window.speechSynthesis.getVoices();
   const inLang = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
   if (!inLang.length) return null;
-  const name = v => v.name.toLowerCase();
-  const isFemale = v => FEMALE_VOICE_HINTS.some(h => name(v).includes(h));
-  const isMale = v => MALE_VOICE_HINTS.some(h => name(v).includes(h));
-
-  // 1) Explicit known male voice
-  let pick = inLang.find(isMale);
-  // 2) Prefer "enhanced/premium" quality male-ish (not flagged female)
-  if (!pick) pick = inLang.find(v => /enhanced|premium|natural|wavenet|neural/i.test(v.name) && !isFemale(v));
-  // 3) Any voice not flagged female
-  if (!pick) pick = inLang.find(v => !isFemale(v));
-  // 4) Fallback: first available
-  return pick || inLang[0];
+  return inLang.slice().sort((a, b) => scoreVoice(b) - scoreVoice(a))[0];
 }
 
+// Speak text broken into natural phrases — gives more human-sounding rhythm
+// (the synth queues utterances with small natural gaps, and short chunks avoid the robotic monotone of one long line)
 function speak(text, opts = {}) {
-  if (!('speechSynthesis' in window)) return;
-  // Strip the «» quotes and emoji for cleaner narration
-  const clean = text.replace(/[«»]/g, '').replace(/[🦸⚔️🔊🏆👨‍🏫🤡🏻♂️‍]/g, '').trim();
+  if (!('speechSynthesis' in window) || !soundOn) return;
+  const clean = text.replace(/[«»"]/g, '').replace(/[🦸⚔️🔊🏆👨‍🏫🤡🏻♂️‍✨🌟]/g, '').trim();
+  if (!clean) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(clean);
-  u.lang = lang === 'ru' ? 'ru-RU' : 'kk-KZ';
-  // Male teacher: slightly slower & lower pitch sounds warmer / less robotic
-  u.rate = opts.rate || 0.9;
-  u.pitch = opts.pitch || 0.85;
 
-  let voice = pickMaleVoice(u.lang.slice(0,2));
-  if (!voice && lang === 'kz') { u.lang = 'ru-RU'; voice = pickMaleVoice('ru'); } // KZ fallback to RU male
-  if (voice) u.voice = voice;
-  window.speechSynthesis.speak(u);
+  let useLang = lang === 'ru' ? 'ru-RU' : 'kk-KZ';
+  let voice = pickBestVoice(useLang.slice(0,2));
+  if (!voice && lang === 'kz') { useLang = 'ru-RU'; voice = pickBestVoice('ru'); } // KZ → RU fallback
+
+  const baseRate = opts.rate || 0.96;   // closer to natural conversational speed
+  const basePitch = opts.pitch || 0.92; // warm male tone, but not too deep/robotic
+
+  // Split into sentences / clauses for a more natural cadence
+  const chunks = clean.match(/[^.!?…,]+[.!?…,]?/g) || [clean];
+  chunks.forEach((chunk, i) => {
+    const c = chunk.trim();
+    if (!c) return;
+    const u = new SpeechSynthesisUtterance(c);
+    u.lang = useLang;
+    if (voice) u.voice = voice;
+    // Gentle, lively variation so it doesn't sound flat/monotone
+    u.rate = baseRate + (Math.random() * 0.06 - 0.03);
+    u.pitch = basePitch + (Math.random() * 0.08 - 0.04);
+    u.volume = 1;
+    window.speechSynthesis.speak(u);
+  });
 }
 
 function stopSpeech() {
@@ -1546,7 +1702,7 @@ function showEnemyIntro(levelIdx) {
   stopSpeech();
   startAmbient();
   document.getElementById('ei-role').textContent = t('enemyRole')[levelIdx];
-  document.getElementById('ei-enemy').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('ei-enemy').innerHTML = ENEMY_SVG[levelIdx];
   document.getElementById('ei-name').textContent = t('lvlNames')[levelIdx];
   document.getElementById('ei-desc').textContent = t('enemyDesc')[levelIdx];
   document.getElementById('ei-skill').textContent = '🎯 ' + t('lvlDesc')[levelIdx];
@@ -1671,12 +1827,14 @@ function startLevel(levelIdx) {
   renderTask();
   updateEnemyHP();
 
-  document.getElementById('enemy-char').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('enemy-char').innerHTML = ENEMY_SVG[levelIdx];
   document.getElementById('enemy-char').className = 'enemy-char';
+  document.getElementById('hero-char').innerHTML = HERO_SVG;
   document.getElementById('hero-char').className = 'hero-char';
   // Reset centered fight stage
-  document.getElementById('fs-enemy').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('fs-enemy').innerHTML = ENEMY_SVG[levelIdx];
   document.getElementById('fs-enemy').className = 'fs-enemy';
+  document.getElementById('fs-hero').innerHTML = HERO_SVG;
   document.getElementById('fs-hero').className = 'fs-hero';
   document.getElementById('fight-stage').classList.remove('active');
   document.getElementById('task-area').style.opacity = '';
@@ -2032,7 +2190,8 @@ function showVictory() {
   state.completed[state.currentLevel] = true;
 
   document.getElementById('stars-display').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
-  document.getElementById('victory-battle').textContent = `🦸🏻‍♂️⚡${LEVEL_ENEMIES[state.currentLevel]}`;
+  document.getElementById('victory-battle').innerHTML =
+    `<span class="vb-hero">${HERO_SVG}</span><span>⚡</span><span class="vb-enemy">${ENEMY_SVG[state.currentLevel]}</span>`;
   document.getElementById('wisdom-text').textContent = t('wisdoms')[state.currentLevel];
   document.getElementById('victory-title').textContent = t('victory');
 
@@ -2094,7 +2253,16 @@ function showCombo(text) {
 // ============================================================
 // INIT
 // ============================================================
+// Populate static character art
+function renderStaticChars() {
+  document.getElementById('menu-hero').innerHTML = HERO_SVG;
+  document.getElementById('intro-teacher').innerHTML = TEACHER_SVG;
+  document.getElementById('intro-villain').innerHTML = CLOWN_SVG;
+  document.getElementById('final-hero').innerHTML = HERO_SVG;
+}
+
 buildBackground();
+renderStaticChars();
 updateTexts();
 showMenu();
 
