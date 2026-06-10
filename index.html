@@ -1364,6 +1364,33 @@ const CLOWN_SVG = SVG_OPEN + `
 
 const ENEMY_SVG = [MACHMUK_SVG, UCHPEK_SVG, BELLA_SVG, HASHAN_SVG, CLOWN_SVG];
 
+// ---- Character art loader -------------------------------------------------
+// Each character can be a high-quality image in /assets. If the file is
+// missing (not generated yet), it gracefully falls back to the inline SVG.
+// Drop PNGs named exactly like CHAR_IMG values into the assets folder and
+// they appear automatically — no code changes needed.
+const CHARSVG = {
+  hero: HERO_SVG, teacher: TEACHER_SVG,
+  e0: MACHMUK_SVG, e1: UCHPEK_SVG, e2: BELLA_SVG, e3: HASHAN_SVG, e4: CLOWN_SVG
+};
+const CHAR_IMG = {
+  hero: 'assets/hero.png', teacher: 'assets/teacher.png',
+  e0: 'assets/machmuk.png', e1: 'assets/uchpek.png', e2: 'assets/bella.png',
+  e3: 'assets/hashan.png', e4: 'assets/clown.png'
+};
+
+// Returns markup that prefers the image, falling back to SVG if it fails to load.
+function charMarkup(key) {
+  const src = CHAR_IMG[key];
+  return `<img src="${src}" alt="" draggable="false" ` +
+    `style="width:1em;height:1em;object-fit:contain;display:block" ` +
+    `onerror="this.outerHTML=CHARSVG['${key}']">`;
+}
+function setChar(elId, key) {
+  const el = document.getElementById(elId);
+  if (el) el.innerHTML = charMarkup(key);
+}
+
 let state = {
   currentLevel: 0,
   lives: 3,
@@ -1702,7 +1729,7 @@ function showEnemyIntro(levelIdx) {
   stopSpeech();
   startAmbient();
   document.getElementById('ei-role').textContent = t('enemyRole')[levelIdx];
-  document.getElementById('ei-enemy').innerHTML = ENEMY_SVG[levelIdx];
+  setChar('ei-enemy', 'e' + levelIdx);
   document.getElementById('ei-name').textContent = t('lvlNames')[levelIdx];
   document.getElementById('ei-desc').textContent = t('enemyDesc')[levelIdx];
   document.getElementById('ei-skill').textContent = '🎯 ' + t('lvlDesc')[levelIdx];
@@ -1827,14 +1854,14 @@ function startLevel(levelIdx) {
   renderTask();
   updateEnemyHP();
 
-  document.getElementById('enemy-char').innerHTML = ENEMY_SVG[levelIdx];
+  setChar('enemy-char', 'e' + levelIdx);
   document.getElementById('enemy-char').className = 'enemy-char';
-  document.getElementById('hero-char').innerHTML = HERO_SVG;
+  setChar('hero-char', 'hero');
   document.getElementById('hero-char').className = 'hero-char';
   // Reset centered fight stage
-  document.getElementById('fs-enemy').innerHTML = ENEMY_SVG[levelIdx];
+  setChar('fs-enemy', 'e' + levelIdx);
   document.getElementById('fs-enemy').className = 'fs-enemy';
-  document.getElementById('fs-hero').innerHTML = HERO_SVG;
+  setChar('fs-hero', 'hero');
   document.getElementById('fs-hero').className = 'fs-hero';
   document.getElementById('fight-stage').classList.remove('active');
   document.getElementById('task-area').style.opacity = '';
@@ -2191,7 +2218,7 @@ function showVictory() {
 
   document.getElementById('stars-display').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
   document.getElementById('victory-battle').innerHTML =
-    `<span class="vb-hero">${HERO_SVG}</span><span>⚡</span><span class="vb-enemy">${ENEMY_SVG[state.currentLevel]}</span>`;
+    `<span class="vb-hero">${charMarkup('hero')}</span><span>⚡</span><span class="vb-enemy">${charMarkup('e'+state.currentLevel)}</span>`;
   document.getElementById('wisdom-text').textContent = t('wisdoms')[state.currentLevel];
   document.getElementById('victory-title').textContent = t('victory');
 
@@ -2255,10 +2282,10 @@ function showCombo(text) {
 // ============================================================
 // Populate static character art
 function renderStaticChars() {
-  document.getElementById('menu-hero').innerHTML = HERO_SVG;
-  document.getElementById('intro-teacher').innerHTML = TEACHER_SVG;
-  document.getElementById('intro-villain').innerHTML = CLOWN_SVG;
-  document.getElementById('final-hero').innerHTML = HERO_SVG;
+  setChar('menu-hero', 'hero');
+  setChar('intro-teacher', 'teacher');
+  setChar('intro-villain', 'e4');
+  setChar('final-hero', 'hero');
 }
 
 buildBackground();
