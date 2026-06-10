@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Герой города</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: #0a0a1a;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    touch-action: manipulation;
+  }
+
+  #game {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== CITY BACKGROUND ===== */
+  .city-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #050510 0%, #0a0a2e 40%, #1a1a3e 100%);
+  }
+
+  .stars {
+    position: absolute;
+    width: 100%;
+    height: 60%;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 2s infinite alternate;
+  }
+
+  @keyframes twinkle {
+    from { opacity: 0.3; }
+    to { opacity: 1; }
+  }
+
+  .buildings {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 45%;
+  }
+
+  .building {
+    position: absolute;
+    bottom: 0;
+    background: #0d0d2b;
+    border: 1px solid #1a1a4a;
+  }
+
+  .window {
+    position: absolute;
+    width: 8px;
+    height: 10px;
+    border-radius: 1px;
+  }
+
+  .window.lit { background: #ffdd88; opacity: 0.7; }
+  .window.dark { background: #0a0a1a; border: 1px solid #1a1a4a; }
+
+  .ground {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(180deg, #0d0d2b 0%, #050510 100%);
+    border-top: 2px solid #2a2a6a;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .screen.hidden { display: none; }
+
+  /* ===== LANGUAGE TOGGLE ===== */
+  #lang-btn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 100;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  /* ===== MENU SCREEN ===== */
+  #menu-screen {
+    background: transparent;
+  }
+
+  .game-title {
+    font-size: clamp(28px, 7vw, 56px);
+    color: #ffd700;
+    text-shadow: 0 0 20px #ff8c00, 0 0 40px #ff4500;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    animation: titlePulse 2s ease-in-out infinite;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 20px #ff8c00, 0 0 40px #ff4500; }
+    50% { text-shadow: 0 0 30px #ffd700, 0 0 60px #ff8c00, 0 0 80px #ff4500; }
+  }
+
+  .hero-display {
+    font-size: clamp(60px, 15vw, 120px);
+    animation: heroFloat 3s ease-in-out infinite;
+    margin: 10px 0;
+  }
+
+  @keyframes heroFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  .subtitle {
+    color: #aaaacc;
+    font-size: clamp(13px, 3vw, 18px);
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 0 20px;
+  }
+
+  .btn-play {
+    background: linear-gradient(135deg, #ffd700, #ff8c00);
+    color: #1a0a00;
+    border: none;
+    padding: clamp(14px, 3vw, 20px) clamp(40px, 10vw, 70px);
+    font-size: clamp(18px, 4vw, 28px);
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 25px rgba(255,140,0,0.5);
+    transition: transform 0.1s, box-shadow 0.1s;
+    letter-spacing: 1px;
+  }
+
+  .btn-play:active { transform: scale(0.96); box-shadow: 0 3px 12px rgba(255,140,0,0.4); }
+
+  /* ===== INTRO SPEECH ===== */
+  #intro-screen {
+    background: rgba(0,0,5,0.85);
+    backdrop-filter: blur(6px);
+    padding: 20px;
+  }
+
+  .intro-teacher {
+    font-size: clamp(60px, 16vw, 100px);
+    animation: heroFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 18px #4488ff);
+  }
+
+  .intro-speech {
+    background: rgba(10,10,50,0.9);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 18px 24px;
+    max-width: 440px;
+    width: 92%;
+    margin: 14px 0;
+    color: #ddeeff;
+    font-size: clamp(15px, 4vw, 21px);
+    line-height: 1.55;
+    text-align: center;
+    font-style: italic;
+    box-shadow: 0 0 30px rgba(255,215,0,0.25);
+  }
+
+  .intro-villain {
+    font-size: clamp(40px, 11vw, 70px);
+    margin-bottom: 18px;
+    filter: drop-shadow(0 0 12px #ff0033) contrast(1.3) brightness(0.85);
+    animation: villainLoom 2.5s ease-in-out infinite;
+  }
+
+  @keyframes villainLoom {
+    0%, 100% { transform: scale(1) rotate(-3deg); opacity: 0.85; }
+    50% { transform: scale(1.12) rotate(3deg); opacity: 1; }
+  }
+
+  #intro-replay { margin-top: 12px; font-size: 14px; padding: 8px 22px; }
+
+  /* ===== LEVEL SELECT ===== */
+  #level-screen {
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .level-title {
+    font-size: clamp(20px, 5vw, 32px);
+    color: #ffd700;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .levels-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    padding: 0 20px;
+  }
+
+  .level-card {
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 18px;
+    padding: 16px 20px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.15s, background 0.15s;
+    min-width: 130px;
+    max-width: 150px;
+  }
+
+  .level-card:active { transform: scale(0.94); }
+  .level-card.unlocked { border-color: #ffd700; }
+  .level-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .level-card.completed { border-color: #44ff88; background: rgba(68,255,136,0.1); }
+
+  .level-card .lv-num {
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .level-card .lv-name {
+    font-size: 11px;
+    color: #aaaacc;
+    margin-top: 4px;
+  }
+
+  .level-card .lv-icon {
+    font-size: 30px;
+    margin-bottom: 4px;
+  }
+
+  .level-card .lv-stars {
+    margin-top: 6px;
+    font-size: 14px;
+  }
+
+  .back-btn {
+    margin-top: 20px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    background: transparent;
+    justify-content: flex-start;
+  }
+
+  #hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 20;
+    background: linear-gradient(180deg, rgba(0,0,10,0.8) 0%, transparent 100%);
+  }
+
+  #hud .hud-lives { font-size: 20px; }
+  #hud .hud-level {
+    color: #ffd700;
+    font-size: 14px;
+    font-weight: bold;
+    flex: 1;
+    text-align: center;
+  }
+  #hud .hud-score {
+    color: #88ddff;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  /* Task area */
+  #task-area {
+    position: absolute;
+    top: 55px;
+    left: 0;
+    right: 0;
+    bottom: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    z-index: 15;
+  }
+
+  .task-instruction {
+    background: rgba(0,0,30,0.85);
+    border: 2px solid #3a3a8a;
+    border-radius: 18px;
+    padding: 12px 20px;
+    color: white;
+    font-size: clamp(14px, 3.5vw, 20px);
+    text-align: center;
+    margin-bottom: 16px;
+    max-width: 400px;
+    width: 100%;
+    line-height: 1.4;
+  }
+
+  .task-instruction .task-emoji {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* Answer buttons */
+  .answers-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .ans-btn {
+    background: rgba(30, 30, 80, 0.9);
+    border: 3px solid #4a4aaa;
+    border-radius: 16px;
+    color: white;
+    font-size: clamp(16px, 5vw, 26px);
+    font-weight: bold;
+    padding: 14px 10px;
+    cursor: pointer;
+    flex: 1;
+    min-width: 70px;
+    max-width: 100px;
+    text-align: center;
+    transition: transform 0.1s, background 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+
+  .ans-btn:active { transform: scale(0.9); }
+  .ans-btn.correct { background: rgba(0,200,80,0.4); border-color: #00cc50; animation: correctPop 0.4s; }
+  .ans-btn.wrong { background: rgba(200,0,0,0.4); border-color: #cc0000; animation: shake 0.4s; }
+
+  @keyframes correctPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* Progress bar for tasks that need sequential input */
+  .progress-slots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .prog-slot {
+    width: clamp(30px, 8vw, 45px);
+    height: clamp(30px, 8vw, 45px);
+    border-radius: 10px;
+    border: 2px solid #4a4aaa;
+    background: rgba(10,10,40,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(14px, 4vw, 20px);
+    font-weight: bold;
+    color: #aaaaff;
+  }
+
+  .prog-slot.filled {
+    background: rgba(0,120,255,0.3);
+    border-color: #4488ff;
+    color: white;
+  }
+
+  /* Enemy & Hero area at bottom */
+  #battle-area {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 95px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 20px 12px;
+    z-index: 15;
+  }
+
+  .hero-char {
+    font-size: clamp(36px, 9vw, 55px);
+    animation: heroIdle 1.5s ease-in-out infinite;
+    position: relative;
+    cursor: default;
+  }
+
+  @keyframes heroIdle {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  .hero-char.attacking {
+    animation: heroAttack 0.6s ease-in-out;
+  }
+
+  @keyframes heroAttack {
+    0% { transform: translateX(0); }
+    30% { transform: translateX(30px) scale(1.2); }
+    60% { transform: translateX(80px) scale(1.3); }
+    100% { transform: translateX(0); }
+  }
+
+  .enemy-char {
+    font-size: clamp(40px, 10vw, 62px);
+    animation: enemyIdle 1.4s ease-in-out infinite;
+    position: relative;
+    filter: drop-shadow(0 0 8px #ff0033) drop-shadow(0 0 18px #660000) hue-rotate(-15deg) contrast(1.3) brightness(0.85);
+  }
+
+  /* Creepy red aura behind enemy */
+  .enemy-char::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle, rgba(255,0,40,0.35) 0%, rgba(120,0,0,0.15) 40%, transparent 70%);
+    border-radius: 50%;
+    z-index: -1;
+    animation: auraPulse 1.5s ease-in-out infinite;
+  }
+
+  /* Glowing evil eyes */
+  .enemy-char::after {
+    content: '👁👁';
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%,-50%) scaleX(-1);
+    font-size: 0.32em;
+    letter-spacing: -2px;
+    filter: drop-shadow(0 0 4px #ff0000) brightness(1.5) sepia(1) saturate(8) hue-rotate(-30deg);
+    opacity: 0.9;
+    animation: eyeFlicker 0.18s steps(2) infinite;
+    pointer-events: none;
+  }
+
+  @keyframes auraPulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  @keyframes eyeFlicker {
+    0% { opacity: 0.9; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes enemyIdle {
+    0%, 100% { transform: translateY(0) scaleX(-1) rotate(-2deg); }
+    25% { transform: translateY(-3px) scaleX(-1) rotate(2deg); }
+    50% { transform: translateY(-4px) scaleX(-1) rotate(-1deg); }
+    75% { transform: translateY(-1px) scaleX(-1) rotate(3deg); }
+  }
+
+  /* Enemy reacts when hit */
+  .enemy-char.hit {
+    animation: enemyHit 0.4s ease-in-out;
+  }
+
+  @keyframes enemyHit {
+    0% { transform: scaleX(-1) translateX(0); filter: brightness(1); }
+    25% { transform: scaleX(-1) translateX(25px) rotate(15deg); }
+    50% { transform: scaleX(-1) translateX(15px) rotate(-10deg); filter: brightness(3) saturate(0); }
+    100% { transform: scaleX(-1) translateX(0); }
+  }
+
+  .enemy-char.defeated {
+    animation: enemyDefeat 1.1s ease-in-out forwards;
+  }
+
+  @keyframes enemyDefeat {
+    0%   { transform: scaleX(-1) scale(1) rotate(0); opacity: 1; filter: brightness(1); }
+    15%  { transform: scaleX(-1) scale(1.3) rotate(-15deg); filter: brightness(4) saturate(0); }
+    30%  { transform: scaleX(-1) scale(0.9) translateY(-30px) rotate(20deg); opacity: 1; }
+    60%  { transform: scaleX(-1) scale(1.1) translateY(10px) rotate(-180deg); opacity: 0.7; }
+    100% { transform: scaleX(-1) scale(0) translateY(40px) rotate(540deg); opacity: 0; filter: blur(8px); }
+  }
+
+  /* Hero flies in for the finishing punch */
+  .hero-char.finisher {
+    animation: heroFinisher 1.2s cubic-bezier(0.5,0,0.3,1) forwards;
+    z-index: 30;
+  }
+
+  @keyframes heroFinisher {
+    0%   { transform: translateX(0) translateY(0) scale(1) rotate(-3deg); }
+    35%  { transform: translateX(20vw) translateY(-40px) scale(1.4) rotate(-15deg); }
+    50%  { transform: translateX(45vw) translateY(0) scale(1.6) rotate(10deg); }
+    62%  { transform: translateX(55vw) translateY(0) scale(1.7) rotate(0deg); }
+    100% { transform: translateX(0) translateY(0) scale(1) rotate(-3deg); }
+  }
+
+  /* Impact star burst */
+  .impact-burst {
+    position: absolute;
+    font-size: clamp(50px, 16vw, 110px);
+    z-index: 40;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .impact-burst.boom { animation: impactBoom 0.6s ease-out forwards; }
+
+  @keyframes impactBoom {
+    0% { opacity: 0; transform: scale(0.2) rotate(0); }
+    30% { opacity: 1; transform: scale(1.4) rotate(20deg); }
+    100% { opacity: 0; transform: scale(2.2) rotate(40deg); }
+  }
+
+  /* Screen shake on big impact */
+  #game-screen.shake-hard { animation: screenShake 0.5s; }
+
+  @keyframes screenShake {
+    0%, 100% { transform: translate(0,0); }
+    20% { transform: translate(-8px, 4px); }
+    40% { transform: translate(8px, -4px); }
+    60% { transform: translate(-6px, -6px); }
+    80% { transform: translate(6px, 4px); }
+  }
+
+  .hp-bar-wrap {
+    position: absolute;
+    bottom: 70px;
+    right: 14px;
+    width: 80px;
+  }
+
+  .hp-bar-bg {
+    height: 8px;
+    background: rgba(100,0,0,0.4);
+    border-radius: 4px;
+    border: 1px solid #aa0000;
+    overflow: hidden;
+  }
+
+  .hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ff0000);
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+
+  .hp-label {
+    text-align: center;
+    font-size: 9px;
+    color: #ff6666;
+    margin-top: 2px;
+  }
+
+  /* ===== VICTORY SCREEN ===== */
+  #victory-screen {
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+  }
+
+  .victory-title {
+    font-size: clamp(26px, 7vw, 48px);
+    color: #ffd700;
+    text-shadow: 0 0 20px #ff8c00;
+    text-align: center;
+    margin-bottom: 6px;
+    animation: victoryBounce 0.6s cubic-bezier(0.36,0.07,0.19,0.97);
+  }
+
+  @keyframes victoryBounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .victory-battle {
+    font-size: clamp(50px, 14vw, 90px);
+    margin: 10px 0;
+    animation: battleScene 1.5s ease-in-out infinite;
+  }
+
+  @keyframes battleScene {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  .wisdom-box {
+    background: rgba(10,10,50,0.9);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 16px 22px;
+    max-width: 380px;
+    width: 90%;
+    margin: 12px 0 20px;
+    text-align: center;
+  }
+
+  .wisdom-teacher {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .wisdom-title {
+    color: #ffd700;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .wisdom-text {
+    color: #ddeeff;
+    font-size: clamp(14px, 3.5vw, 17px);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .stars-display {
+    font-size: 32px;
+    margin-bottom: 10px;
+    animation: starsAppear 0.8s 0.5s both;
+  }
+
+  @keyframes starsAppear {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .btn-next {
+    background: linear-gradient(135deg, #4488ff, #0044cc);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    font-size: clamp(16px, 4vw, 22px);
+    font-weight: bold;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(68,136,255,0.5);
+    margin-top: 4px;
+  }
+
+  .btn-next:active { transform: scale(0.96); }
+
+  /* ===== GAME OVER ===== */
+  #gameover-screen {
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(6px);
+  }
+
+  .go-title {
+    font-size: clamp(28px, 7vw, 50px);
+    color: #ff4444;
+    text-shadow: 0 0 20px #aa0000;
+    margin-bottom: 10px;
+  }
+
+  .go-icon { font-size: 80px; margin: 10px 0; }
+
+  .go-text {
+    color: #ccccee;
+    font-size: clamp(14px, 3.5vw, 18px);
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 0 20px;
+  }
+
+  .btn-retry {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    font-size: clamp(16px, 4vw, 22px);
+    font-weight: bold;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,68,68,0.5);
+    margin-bottom: 12px;
+  }
+
+  /* ===== FINAL WIN ===== */
+  #final-screen {
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+  }
+
+  .final-title {
+    font-size: clamp(22px, 6vw, 40px);
+    color: #ffd700;
+    text-shadow: 0 0 30px #ff8c00;
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    animation: titlePulse 2s infinite;
+  }
+
+  .final-hero { font-size: clamp(60px, 16vw, 110px); animation: heroFloat 2s infinite; }
+
+  .final-wisdom-box {
+    background: rgba(10,10,50,0.95);
+    border: 3px solid #ffd700;
+    border-radius: 22px;
+    padding: 18px 24px;
+    max-width: 400px;
+    width: 90%;
+    margin: 12px 0 20px;
+    text-align: center;
+  }
+
+  /* ===== FEEDBACK FLASH ===== */
+  #feedback-flash {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #feedback-flash.show { opacity: 1; animation: flashPop 0.5s forwards; }
+
+  @keyframes flashPop {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    60% { transform: translate(-50%, -60%) scale(1.3); opacity: 1; }
+    100% { transform: translate(-50%, -80%) scale(1); opacity: 0; }
+  }
+
+  /* ===== COMBO TEXT ===== */
+  #combo-text {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: clamp(18px, 5vw, 28px);
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 10px #ff8c00;
+    z-index: 201;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  #combo-text.show {
+    animation: comboAnim 1s forwards;
+  }
+
+  @keyframes comboAnim {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+  }
+
+  /* ===== MEMORY GAME GRID ===== */
+  .memory-grid {
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .mem-card {
+    width: clamp(60px, 16vw, 85px);
+    height: clamp(60px, 16vw, 85px);
+    border-radius: 14px;
+    border: 3px solid #4a4aaa;
+    background: rgba(20,20,60,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(22px, 6vw, 36px);
+    cursor: pointer;
+    transition: transform 0.15s;
+    user-select: none;
+  }
+
+  .mem-card:active { transform: scale(0.92); }
+  .mem-card.revealed { border-color: #4488ff; background: rgba(30,60,120,0.8); }
+  .mem-card.matched { border-color: #44ff88; background: rgba(20,80,40,0.8); animation: matchPop 0.4s; }
+  .mem-card.hidden-card { background: rgba(10,10,40,0.95); }
+
+  @keyframes matchPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  /* ===== LIGHTNING EFFECTS ===== */
+  .lightning {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 199;
+    opacity: 0;
+  }
+
+  .lightning.flash { animation: lightningFlash 0.15s 3; }
+
+  @keyframes lightningFlash {
+    0%, 100% { opacity: 0; background: transparent; }
+    50% { opacity: 0.3; background: rgba(100,150,255,0.15); }
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <!-- City Background -->
+  <div class="city-bg">
+    <div class="stars" id="stars-container"></div>
+    <div class="buildings" id="buildings-container"></div>
+    <div class="ground"></div>
+  </div>
+
+  <!-- Language Button -->
+  <button id="lang-btn" onclick="toggleLang()">🌐 KZ</button>
+
+  <!-- Screens -->
+  <div id="menu-screen" class="screen">
+    <div class="hero-display">🦸🏻‍♂️</div>
+    <div class="game-title" id="title-text">ГЕРОЙ<br>ТЁМНОГО ГОРОДА</div>
+    <div class="subtitle" id="subtitle-text">Помоги супергерою победить всех бабаек!</div>
+    <button class="btn-play" onclick="showLevelSelect()" id="play-btn-text">▶ ИГРАТЬ</button>
+  </div>
+
+  <div id="intro-screen" class="screen hidden">
+    <div class="intro-teacher" id="intro-teacher">👨‍🏫</div>
+    <div class="wisdom-title" id="intro-label">УЧИТЕЛЬ ГОВОРИТ</div>
+    <div class="intro-speech" id="intro-speech"></div>
+    <div class="intro-villain">🤡</div>
+    <button class="btn-play" onclick="finishIntro()" id="intro-btn">Я готов! ⚔️</button>
+    <button class="back-btn" onclick="replayIntro()" id="intro-replay">🔊 Повторить</button>
+  </div>
+
+  <div id="level-screen" class="screen hidden">
+    <div class="level-title" id="choose-level-text">Выбери уровень</div>
+    <div class="levels-grid" id="levels-grid"></div>
+    <button class="back-btn" onclick="showMenu()" id="back-btn-text">← Назад</button>
+  </div>
+
+  <div id="game-screen" class="screen hidden">
+    <div id="hud">
+      <div class="hud-lives" id="hud-lives">❤️❤️❤️</div>
+      <div class="hud-level" id="hud-level-text">Уровень 1</div>
+      <div class="hud-score" id="hud-score">★ 0</div>
+    </div>
+
+    <div id="task-area">
+      <div class="task-instruction" id="task-instruction">
+        <span class="task-emoji" id="task-emoji">🔢</span>
+        <span id="task-text">Нажимай числа по порядку!</span>
+      </div>
+      <div class="progress-slots" id="progress-slots"></div>
+      <div class="answers-grid" id="answers-grid"></div>
+    </div>
+
+    <div class="hp-bar-wrap" id="hp-bar-wrap">
+      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-bar-fill"></div></div>
+      <div class="hp-label" id="hp-label">HP</div>
+    </div>
+
+    <div id="battle-area">
+      <div class="hero-char" id="hero-char">🦸🏻‍♂️</div>
+      <div class="impact-burst" id="impact-burst" style="left:50%;top:-20px">💥</div>
+      <div class="enemy-char" id="enemy-char">👹</div>
+    </div>
+  </div>
+
+  <div id="victory-screen" class="screen hidden">
+    <div class="victory-title" id="victory-title">🎉 Победа!</div>
+    <div class="victory-battle" id="victory-battle">🦸🏻‍♂️⚡👹</div>
+    <div class="stars-display" id="stars-display">⭐⭐⭐</div>
+    <div class="wisdom-box">
+      <div class="wisdom-teacher">📚</div>
+      <div class="wisdom-title" id="wisdom-title-text">МУДРОСТЬ УЧИТЕЛЯ</div>
+      <div class="wisdom-text" id="wisdom-text">Молодец!</div>
+    </div>
+    <button class="btn-next" onclick="nextLevel()" id="next-btn-text">Дальше →</button>
+  </div>
+
+  <div id="gameover-screen" class="screen hidden">
+    <div class="go-title" id="go-title">Попробуй ещё!</div>
+    <div class="go-icon">😤</div>
+    <div class="go-text" id="go-text">Настоящий герой никогда не сдаётся!</div>
+    <button class="btn-retry" onclick="retryLevel()" id="retry-btn-text">🔄 Ещё раз</button>
+    <button class="back-btn" onclick="showMenu()" id="go-menu-text">🏠 Меню</button>
+  </div>
+
+  <div id="final-screen" class="screen hidden">
+    <div class="final-title" id="final-title">🏆 ТЫ ПОБЕДИЛ<br>ВСЕХ БАБАЕК! 🏆</div>
+    <div class="final-hero">🦸🏻‍♂️🌟</div>
+    <div class="final-wisdom-box">
+      <div class="wisdom-teacher" style="font-size:36px">👨‍🏫</div>
+      <div class="wisdom-title" id="final-wisdom-title">СЛОВА УЧИТЕЛЯ</div>
+      <div class="wisdom-text" id="final-wisdom-text"></div>
+    </div>
+    <button class="btn-play" onclick="showMenu()" id="final-menu-text">🏠 В меню</button>
+  </div>
+
+  <!-- Effects -->
+  <div id="feedback-flash"></div>
+  <div id="combo-text"></div>
+  <div class="lightning" id="lightning"></div>
+</div>
+
+<script>
+// ============================================================
+// LOCALIZATION
+// ============================================================
+let lang = 'ru';
+
+const T = {
+  ru: {
+    title: 'ГЕРОЙ\nТЁМНОГО ГОРОДА',
+    subtitle: 'Помоги супергерою победить всех бабаек!',
+    play: '▶ ИГРАТЬ',
+    chooseLvl: 'Выбери уровень',
+    back: '← Назад',
+    wisdomTitle: 'МУДРОСТЬ УЧИТЕЛЯ',
+    next: 'Дальше →',
+    retry: '🔄 Ещё раз',
+    goMenu: '🏠 Меню',
+    finalMenu: '🏠 В меню',
+    goTitle: 'Попробуй ещё!',
+    goText: 'Настоящий герой никогда не сдаётся!',
+    finalTitle: '🏆 ТЫ ПОБЕДИЛ\nВСЕХ БАБАЕК! 🏆',
+    finalWisdomTitle: 'СЛОВА УЧИТЕЛЯ',
+    victory: '🎉 Победа!',
+    lvlLabel: 'Уровень',
+    lvlNames: ['Бабай Счётовод','Бабай Буквоед','Бабай Путаник','Бабай Обманщик','Бабай Клоун'],
+    lvlDesc: ['Числа','Буквы','Математика','Логика','Пары'],
+    task1: 'Нажимай числа по порядку от 1 до ',
+    task2_pre: 'Составь слово: ',
+    task2_pick: 'Найди буквы слова ',
+    task3: 'Реши пример и выбери ответ!',
+    task4: 'Найди лишний предмет!',
+    task5: 'Найди все пары!',
+    correct: ['Отлично!','Супер!','Молодец!','Правильно!','Здорово!'],
+    wrong: ['Упс...','Не то...','Попробуй ещё!'],
+    wisdoms: [
+      '«Считай и думай — это сила настоящего героя! Слушайся маму и папу, они помогут тебе считать ещё лучше!»',
+      '«Буквы — это ключи от всех книг. Читай каждый день, и ты узнаешь все секреты мира!»',
+      '«Думать — это не страшно, это интересно! Решай задачки вместе с мамой — это весело!»',
+      '«Настоящий герой замечает что лишнее и всегда убирает за собой. Порядок — это сила!»',
+      '«Помни пары и помни своих друзей! Дружи, помогай, и ты всегда будешь победителем!»',
+    ],
+    finalWisdom: '«Ты прошёл все испытания и победил всех бабаек! Теперь ты знаешь — настоящий герой учится, слушается родителей, помогает другим и никогда не сдаётся. Ты — НАСТОЯЩИЙ ГЕРОЙ! 🦸»',
+    introLabel: 'УЧИТЕЛЬ ГОВОРИТ',
+    introBtn: 'Я готов! ⚔️',
+    introReplay: '🔊 Повторить',
+    introSpeech: 'Слушай меня, юный герой! Тёмный город захватили злые бабайки, а ими правит главный злодей — страшный Клоун. Только ты, мальчик-герой, можешь победить их всех! Чтобы одолеть каждую бабайку, тебе нужны ум, смелость и доброе сердце. Считай, читай, думай — и тьма отступит. Вперёд, герой! Город ждёт тебя!',
+  },
+  kz: {
+    title: 'ҚАРАҢҒЫ ҚАЛАНЫҢ\nБАТЫРЫ',
+    subtitle: 'Суперқаһарманға барлық кикімоктарды жеңуге көмектес!',
+    play: '▶ ОЙНАУ',
+    chooseLvl: 'Деңгейді таңда',
+    back: '← Артқа',
+    wisdomTitle: 'ҰСТАЗДЫҢ ДАНАЛЫҒЫ',
+    next: 'Алға →',
+    retry: '🔄 Қайтадан',
+    goMenu: '🏠 Мәзір',
+    finalMenu: '🏠 Мәзірге',
+    goTitle: 'Тағы көр!',
+    goText: 'Нағыз батыр ешқашан бас тартпайды!',
+    finalTitle: '🏆 СЕН БАРЛЫҚ\nКИКІМОКТАРДЫ ЖЕҢДІҢ! 🏆',
+    finalWisdomTitle: 'ҰСТАЗ СӨЗІ',
+    victory: '🎉 Жеңіс!',
+    lvlLabel: 'Деңгей',
+    lvlNames: ['Санаушы Кикімок','Әріп Кикімок','Шатастырушы','Алдаушы Кикімок','Клоун Кикімок'],
+    lvlDesc: ['Сандар','Әріптер','Математика','Логика','Жұптар'],
+    task1: 'Сандарды ретімен бас: 1-ден ',
+    task2_pre: 'Сөз жаса: ',
+    task2_pick: 'Сөздің әріптерін тап ',
+    task3: 'Мысалды шеш және жауапты таңда!',
+    task4: 'Артық затты тап!',
+    task5: 'Барлық жұптарды тап!',
+    correct: ['Керемет!','Тамаша!','Жарайсың!','Дұрыс!','Өте жақсы!'],
+    wrong: ['Жоқ...','Дұрыс емес...','Тағы көр!'],
+    wisdoms: [
+      '«Санай білу — нағыз батырдың күші! Ата-анаңды тыңда, олар саған одан да жақсы санауға көмектеседі!»',
+      '«Әріптер — барлық кітаптардың кілті. Күнде оқы, сонда дүниенің барлық сырын білесің!»',
+      '«Ойлану қорқынышты емес, ол қызықты! Мамамен есептерді шеш — бұл өте қызықты!»',
+      '«Нағыз батыр артықты байқайды және үнемі тазалайды. Тәртіп — күш!»',
+      '«Жұптарды есте сақта және достарыңды есте сақта! Дос бол, көмектес, сонда сен үнемі жеңімпаз боласың!»',
+    ],
+    finalWisdom: '«Сен барлық сынақтардан өттің және барлық кикімоктарды жеңдің! Енді сен білесің — нағыз батыр үйренеді, ата-анасын тыңдайды, басқаларға көмектеседі және ешқашан бас тартпайды. Сен — НАҒЫЗ БАТЫРСЫҢ! 🦸»',
+    introLabel: 'ҰСТАЗ СӨЙЛЕЙДІ',
+    introBtn: 'Мен дайынмын! ⚔️',
+    introReplay: '🔊 Қайталау',
+    introSpeech: 'Тыңда мені, жас батыр! Қараңғы қаланы зұлым кикімоктар басып алды, ал оларды басты зұлым — қорқынышты Клоун билейді. Тек сен ғана, бала-батыр, олардың барлығын жеңе аласың! Әрбір кикімокты жеңу үшін саған ақыл, батылдық және мейірімді жүрек керек. Сана, оқы, ойлан — сонда қараңғылық шегінеді. Алға, батыр! Қала сені күтуде!',
+  }
+};
+
+function t(key) { return T[lang][key]; }
+
+// ============================================================
+// GAME STATE
+// ============================================================
+const LEVEL_ENEMIES = ['👹','👺','🧟‍♂️','💀','🤡'];
+const LEVEL_ENEMY_NAMES_RU = ['Бабай Счётовод','Бабай Буквоед','Бабай Путаник','Бабай Обманщик','Бабай Клоун'];
+const LEVEL_ICONS = ['🔢','🔤','➕','🧩','🃏'];
+
+let state = {
+  currentLevel: 0,
+  lives: 3,
+  score: 0,
+  enemyHP: 3,
+  maxEnemyHP: 3,
+  completed: [false,false,false,false,false],
+  stars: [0,0,0,0,0],
+  taskData: null,
+  taskPhase: 0,
+  mistakes: 0,
+  memFlipped: [],
+  memMatched: [],
+  memCards: [],
+  memLock: false,
+};
+
+// ============================================================
+// BACKGROUND GENERATION
+// ============================================================
+function buildBackground() {
+  // Stars
+  const starsEl = document.getElementById('stars-container');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${1.5+Math.random()*2}s`;
+    starsEl.appendChild(s);
+  }
+
+  // Buildings
+  const buildEl = document.getElementById('buildings-container');
+  const W = window.innerWidth;
+  let x = -20;
+  while (x < W + 60) {
+    const bw = 30 + Math.random() * 70;
+    const bh = 80 + Math.random() * 200;
+    const b = document.createElement('div');
+    b.className = 'building';
+    b.style.cssText = `left:${x}px;width:${bw}px;height:${bh}px`;
+
+    // Windows
+    const cols = Math.floor(bw / 14);
+    const rows = Math.floor(bh / 16);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const w = document.createElement('div');
+        w.className = 'window ' + (Math.random() > 0.6 ? 'dark' : 'lit');
+        w.style.cssText = `left:${4 + c*13}px;top:${6 + r*15}px`;
+        if (Math.random() > 0.7) w.style.animationDelay = Math.random()*4 + 's';
+        b.appendChild(w);
+      }
+    }
+    buildEl.appendChild(b);
+    x += bw + Math.random() * 8 - 4;
+  }
+}
+
+// ============================================================
+// LANGUAGE
+// ============================================================
+function toggleLang() {
+  stopSpeech();
+  lang = lang === 'ru' ? 'kz' : 'ru';
+  document.getElementById('lang-btn').textContent = '🌐 ' + (lang === 'ru' ? 'KZ' : 'RU');
+  updateTexts();
+}
+
+function updateTexts() {
+  document.getElementById('title-text').innerHTML = t('title').replace('\n','<br>');
+  document.getElementById('subtitle-text').textContent = t('subtitle');
+  document.getElementById('play-btn-text').textContent = t('play');
+  document.getElementById('choose-level-text').textContent = t('chooseLvl');
+  document.getElementById('back-btn-text').textContent = t('back');
+  document.getElementById('wisdom-title-text').textContent = t('wisdomTitle');
+  document.getElementById('next-btn-text').textContent = t('next');
+  document.getElementById('retry-btn-text').textContent = t('retry');
+  document.getElementById('go-menu-text').textContent = t('goMenu');
+  document.getElementById('final-menu-text').textContent = t('finalMenu');
+  document.getElementById('go-title').textContent = t('goTitle');
+  document.getElementById('go-text').textContent = t('goText');
+  document.getElementById('final-title').innerHTML = t('finalTitle').replace('\n','<br>');
+  document.getElementById('final-wisdom-title').textContent = t('finalWisdomTitle');
+  document.getElementById('victory-title').textContent = t('victory');
+  document.getElementById('intro-label').textContent = t('introLabel');
+  document.getElementById('intro-btn').textContent = t('introBtn');
+  document.getElementById('intro-replay').textContent = t('introReplay');
+  document.getElementById('intro-speech').textContent = t('introSpeech');
+
+  if (!document.getElementById('level-screen').classList.contains('hidden')) {
+    renderLevelSelect();
+  }
+}
+
+// ============================================================
+// SPEECH (Web Speech API)
+// ============================================================
+// Known male voice names by platform (macOS / Windows / Google / Siri)
+const MALE_VOICE_HINTS = ['yuri','pavel','dmitri','artem','aleksandr','maxim','ru-ru-wavenet-b','ru-ru-wavenet-d','ru-ru-standard-b','ru-ru-standard-d','google русский','microsoft pavel','microsoft dmitry','siri','milos','daniel'];
+const FEMALE_VOICE_HINTS = ['milena','katya','tatyana','alyona','svetlana','irina','elena','wavenet-a','wavenet-c','standard-a','standard-c','female','женск'];
+
+function pickMaleVoice(langPrefix) {
+  const voices = window.speechSynthesis.getVoices();
+  const inLang = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+  if (!inLang.length) return null;
+  const name = v => v.name.toLowerCase();
+  const isFemale = v => FEMALE_VOICE_HINTS.some(h => name(v).includes(h));
+  const isMale = v => MALE_VOICE_HINTS.some(h => name(v).includes(h));
+
+  // 1) Explicit known male voice
+  let pick = inLang.find(isMale);
+  // 2) Prefer "enhanced/premium" quality male-ish (not flagged female)
+  if (!pick) pick = inLang.find(v => /enhanced|premium|natural|wavenet|neural/i.test(v.name) && !isFemale(v));
+  // 3) Any voice not flagged female
+  if (!pick) pick = inLang.find(v => !isFemale(v));
+  // 4) Fallback: first available
+  return pick || inLang[0];
+}
+
+function speak(text, opts = {}) {
+  if (!('speechSynthesis' in window)) return;
+  // Strip the «» quotes and emoji for cleaner narration
+  const clean = text.replace(/[«»]/g, '').replace(/[🦸⚔️🔊🏆👨‍🏫🤡🏻♂️‍]/g, '').trim();
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = lang === 'ru' ? 'ru-RU' : 'kk-KZ';
+  // Male teacher: slightly slower & lower pitch sounds warmer / less robotic
+  u.rate = opts.rate || 0.9;
+  u.pitch = opts.pitch || 0.85;
+
+  let voice = pickMaleVoice(u.lang.slice(0,2));
+  if (!voice && lang === 'kz') { u.lang = 'ru-RU'; voice = pickMaleVoice('ru'); } // KZ fallback to RU male
+  if (voice) u.voice = voice;
+  window.speechSynthesis.speak(u);
+}
+
+function stopSpeech() {
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+// ============================================================
+// SCREEN NAV
+// ============================================================
+function showScreen(id) {
+  ['menu-screen','intro-screen','level-screen','game-screen','victory-screen','gameover-screen','final-screen']
+    .forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function showMenu() { stopSpeech(); showScreen('menu-screen'); }
+
+let introSeen = false;
+
+// Play button → epic teacher intro the first time, then level select
+function showLevelSelect() {
+  if (!introSeen) { showIntro(); return; }
+  renderLevelSelect();
+  showScreen('level-screen');
+}
+
+function showIntro() {
+  showScreen('intro-screen');
+  // Slight delay so voices are loaded & screen is visible
+  setTimeout(() => speak(t('introSpeech'), { rate: 0.88, pitch: 0.8 }), 350);
+}
+
+function replayIntro() { speak(t('introSpeech'), { rate: 0.88, pitch: 0.8 }); }
+
+function finishIntro() {
+  introSeen = true;
+  stopSpeech();
+  renderLevelSelect();
+  showScreen('level-screen');
+}
+
+function renderLevelSelect() {
+  const grid = document.getElementById('levels-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const card = document.createElement('div');
+    const isLocked = i > 0 && !state.completed[i-1];
+    card.className = 'level-card ' + (state.completed[i] ? 'completed' : (isLocked ? 'locked' : 'unlocked'));
+    const stars = '⭐'.repeat(state.stars[i]) + '☆'.repeat(3 - state.stars[i]);
+    card.innerHTML = `
+      <div class="lv-icon">${isLocked ? '🔒' : LEVEL_ICONS[i]}</div>
+      <div class="lv-num">${t('lvlLabel')} ${i+1}</div>
+      <div class="lv-name">${t('lvlDesc')[i]}</div>
+      <div class="lv-stars">${state.completed[i] ? stars : (isLocked ? '' : '☆☆☆')}</div>
+    `;
+    if (!isLocked) card.onclick = () => startLevel(i);
+    grid.appendChild(card);
+  }
+}
+
+// ============================================================
+// LEVEL TASKS
+// ============================================================
+function generateTask(level) {
+  if (level === 0) return generateNumbers();
+  if (level === 1) return generateLetters();
+  if (level === 2) return generateMath();
+  if (level === 3) return generateLogic();
+  if (level === 4) return generateMemory();
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function rand(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+
+// Level 1: Numbers in order
+function generateNumbers() {
+  const max = 5;
+  const nums = shuffle([1,2,3,4,5]);
+  return { type: 'numbers', sequence: [1,2,3,4,5], displayed: nums, current: 0, max };
+}
+
+// Level 2: Spell a word — pick letters in order
+const WORDS_RU = ['КОТ','ДОМ','МАК','ШАР','МЁД'];
+const WORDS_KZ = ['АТА','АНА','КӨК','ТАС','СУ'];
+
+function generateLetters() {
+  const words = lang === 'ru' ? WORDS_RU : WORDS_KZ;
+  const word = words[rand(0, words.length-1)];
+  const letters = word.split('');
+  // Extra wrong letters
+  const extra = lang === 'ru'
+    ? ['Б','В','Г','Д','Е','Ж','З','И','Й','Л','Н','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш']
+    : ['Б','В','Ж','З','И','Й','Л','Н','П','Р','С','Т','У','Х','Ш','Ы','Ə','Ғ'];
+  const wrongLetters = shuffle(extra).slice(0, Math.max(3, 8 - letters.length));
+  const allLetters = shuffle([...letters, ...wrongLetters]).slice(0, 9);
+  // ensure all correct letters present
+  letters.forEach(l => { if (!allLetters.includes(l)) allLetters[rand(0,allLetters.length-1)] = l; });
+  return { type: 'letters', word, letters, displayed: allLetters, collected: [] };
+}
+
+// Level 3: Math
+function generateMath() {
+  const problems = [];
+  for (let i = 0; i < 3; i++) {
+    const op = rand(0,1);
+    let a, b, answer;
+    if (op === 0) { a = rand(1,9); b = rand(1,9-a); answer = a+b; }
+    else { a = rand(2,9); b = rand(1,a-1); answer = a-b; }
+    const wrong1 = answer + rand(1,3);
+    const wrong2 = Math.max(0, answer - rand(1,3));
+    const wrong3 = answer + rand(4,6);
+    const choices = shuffle([answer, wrong1, wrong2, wrong3]).slice(0,3);
+    if (!choices.includes(answer)) choices[0] = answer;
+    problems.push({ a, b, op: op===0?'+':'-', answer, choices: shuffle(choices) });
+  }
+  return { type: 'math', problems, current: 0 };
+}
+
+// Level 4: Odd one out
+const CATEGORIES_RU = [
+  { name: 'Животные', items: ['🐶','🐱','🐭','🐰','🦊'], odd: ['🚗','✈️','🏠','🍎','📚'] },
+  { name: 'Фрукты',   items: ['🍎','🍊','🍋','🍇','🍓'], odd: ['🚀','🐶','⚽','🌙','🔑'] },
+  { name: 'Транспорт',items: ['🚗','🚕','🚙','🚌','🏎️'],  odd: ['🌸','🐠','🍕','🎈','💎'] },
+  { name: 'Игрушки',  items: ['⚽','🎈','🪀','🎁','🎮'], odd: ['🌊','🍞','🐍','🔔','🌵'] },
+];
+
+function generateLogic() {
+  const cat = CATEGORIES_RU[rand(0, CATEGORIES_RU.length-1)];
+  const goodItems = shuffle(cat.items).slice(0,3);
+  const oddItem = cat.odd[rand(0, cat.odd.length-1)];
+  const all = shuffle([...goodItems, oddItem]);
+  return { type: 'logic', correct: oddItem, items: all };
+}
+
+// Level 5: Memory pairs
+const PAIRS_POOL = ['🌟','🌙','☀️','🌈','🎵','🎨','🎯','🏆','💎','🔥','❄️','🌊'];
+
+function generateMemory() {
+  const chosen = shuffle(PAIRS_POOL).slice(0, 4);
+  const cards = shuffle([...chosen, ...chosen]);
+  return { type: 'memory', cards, revealed: [], matched: [], lock: false };
+}
+
+// ============================================================
+// GAME LOGIC
+// ============================================================
+function startLevel(levelIdx) {
+  stopSpeech();
+  state.currentLevel = levelIdx;
+  state.lives = 3;
+  state.score = 0;
+  state.enemyHP = 3;
+  state.maxEnemyHP = 3;
+  state.mistakes = 0;
+  state.taskData = generateTask(levelIdx);
+
+  showScreen('game-screen');
+  renderHUD();
+  renderTask();
+  updateEnemyHP();
+
+  document.getElementById('enemy-char').textContent = LEVEL_ENEMIES[levelIdx];
+  document.getElementById('enemy-char').className = 'enemy-char';
+  document.getElementById('hero-char').className = 'hero-char';
+}
+
+function renderHUD() {
+  document.getElementById('hud-lives').textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(3-state.lives);
+  document.getElementById('hud-level-text').textContent = `${t('lvlLabel')} ${state.currentLevel+1} — ${t('lvlNames')[state.currentLevel]}`;
+  document.getElementById('hud-score').textContent = `★ ${state.score}`;
+}
+
+function updateEnemyHP() {
+  const pct = (state.enemyHP / state.maxEnemyHP) * 100;
+  document.getElementById('hp-bar-fill').style.width = pct + '%';
+  document.getElementById('hp-label').textContent = '👹 ' + state.enemyHP + '/' + state.maxEnemyHP;
+}
+
+function renderTask() {
+  const td = state.taskData;
+  const slots = document.getElementById('progress-slots');
+  const grid = document.getElementById('answers-grid');
+  const instrEmoji = document.getElementById('task-emoji');
+  const instrText = document.getElementById('task-text');
+  slots.innerHTML = '';
+  grid.innerHTML = '';
+
+  if (td.type === 'numbers') {
+    instrEmoji.textContent = '🔢';
+    instrText.textContent = t('task1') + td.max + '!';
+    // Slots
+    for (let i = 0; i < td.max; i++) {
+      const s = document.createElement('div');
+      s.className = 'prog-slot' + (i < td.current ? ' filled' : '');
+      s.textContent = i < td.current ? td.sequence[i] : '';
+      s.id = 'slot-' + i;
+      slots.appendChild(s);
+    }
+    // Buttons
+    td.displayed.forEach(n => {
+      if (n <= td.current) return; // already placed
+      const btn = document.createElement('button');
+      btn.className = 'ans-btn';
+      btn.textContent = n;
+      btn.id = 'nbtn-' + n;
+      btn.onclick = () => handleNumber(n, btn);
+      grid.appendChild(btn);
+    });
+
+  } else if (td.type === 'letters') {
+    instrEmoji.textContent = '🔤';
+    instrText.textContent = t('task2_pick') + '"' + td.word + '"';
+    // Slots for collected
+    for (let i = 0; i < td.letters.length; i++) {
+      const s = document.createElement('div');
+      s.className = 'prog-slot' + (td.collected[i] ? ' filled' : '');
+      s.textContent = td.collected[i] || '';
+      slots.appendChild(s);
+    }
+    td.displayed.forEach(letter => {
+      const btn = document.createElement('button');
+      btn.className = 'ans-btn';
+      btn.textContent = letter;
+      btn.onclick = () => handleLetter(letter, btn);
+      grid.appendChild(btn);
+    });
+
+  } else if (td.type === 'math') {
+    const prob = td.problems[td.current];
+    instrEmoji.textContent = '➕';
+    instrText.textContent = `${prob.a} ${prob.op} ${prob.b} = ?`;
+    // Progress dots
+    for (let i = 0; i < td.problems.length; i++) {
+      const s = document.createElement('div');
+      s.className = 'prog-slot' + (i < td.current ? ' filled' : '');
+      s.textContent = i < td.current ? '✓' : (i+1);
+      slots.appendChild(s);
+    }
+    prob.choices.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'ans-btn';
+      btn.textContent = c;
+      btn.onclick = () => handleMath(c, btn, prob.answer);
+      grid.appendChild(btn);
+    });
+
+  } else if (td.type === 'logic') {
+    instrEmoji.textContent = '🧩';
+    instrText.textContent = t('task4');
+    td.items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'ans-btn';
+      btn.style.fontSize = 'clamp(28px,8vw,42px)';
+      btn.textContent = item;
+      btn.onclick = () => handleLogic(item, btn);
+      grid.appendChild(btn);
+    });
+
+  } else if (td.type === 'memory') {
+    instrEmoji.textContent = '🃏';
+    instrText.textContent = t('task5');
+    document.getElementById('hp-bar-wrap').style.display = 'none';
+
+    const memGrid = document.createElement('div');
+    memGrid.className = 'memory-grid';
+    memGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    td.cards.forEach((card, idx) => {
+      const c = document.createElement('div');
+      c.className = 'mem-card hidden-card';
+      c.textContent = '❓';
+      c.id = 'mc-' + idx;
+      c.onclick = () => handleMemory(idx);
+      memGrid.appendChild(c);
+    });
+    grid.appendChild(memGrid);
+  }
+}
+
+// ============================================================
+// TASK HANDLERS
+// ============================================================
+function handleNumber(n, btn) {
+  const td = state.taskData;
+  const expected = td.current + 1;
+  if (n === expected) {
+    btn.classList.add('correct');
+    btn.disabled = true;
+    document.getElementById('slot-' + td.current).textContent = n;
+    document.getElementById('slot-' + td.current).classList.add('filled');
+    td.current++;
+    showFeedback('✅');
+    showCombo(t('correct')[rand(0, t('correct').length-1)]);
+    if (td.current === td.max) { hitEnemy(); }
+    else setTimeout(() => renderTask(), 400);
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+    onMistake();
+  }
+}
+
+function handleLetter(letter, btn) {
+  const td = state.taskData;
+  const expected = td.letters[td.collected.length];
+  if (letter === expected) {
+    btn.classList.add('correct');
+    btn.disabled = true;
+    td.collected.push(letter);
+    showFeedback('✅');
+    // Update slots
+    const slots = document.querySelectorAll('.prog-slot');
+    slots[td.collected.length-1].textContent = letter;
+    slots[td.collected.length-1].classList.add('filled');
+    if (td.collected.length === td.letters.length) { setTimeout(() => hitEnemy(), 400); }
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+    onMistake();
+  }
+}
+
+function handleMath(answer, btn, correct) {
+  const td = state.taskData;
+  if (answer === correct) {
+    btn.classList.add('correct');
+    showFeedback('✅');
+    showCombo(t('correct')[rand(0, t('correct').length-1)]);
+    td.current++;
+    if (td.current === td.problems.length) { setTimeout(() => hitEnemy(), 400); }
+    else setTimeout(() => renderTask(), 600);
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+    onMistake();
+  }
+}
+
+function handleLogic(item, btn) {
+  const td = state.taskData;
+  if (item === td.correct) {
+    btn.classList.add('correct');
+    showFeedback('✅');
+    showCombo(t('correct')[rand(0, t('correct').length-1)]);
+    setTimeout(() => hitEnemy(), 500);
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+    onMistake();
+  }
+}
+
+function handleMemory(idx) {
+  const td = state.taskData;
+  if (td.lock) return;
+  if (td.matched.includes(idx)) return;
+  if (td.revealed.includes(idx)) return;
+
+  const card = document.getElementById('mc-' + idx);
+  card.textContent = td.cards[idx];
+  card.classList.remove('hidden-card');
+  card.classList.add('revealed');
+
+  td.revealed.push(idx);
+
+  if (td.revealed.length === 2) {
+    td.lock = true;
+    const [a, b] = td.revealed;
+    if (td.cards[a] === td.cards[b]) {
+      // Match!
+      td.matched.push(a, b);
+      td.revealed = [];
+      td.lock = false;
+      document.getElementById('mc-'+a).classList.add('matched');
+      document.getElementById('mc-'+b).classList.add('matched');
+      showFeedback('🎯');
+      state.score += 10;
+      renderHUD();
+      if (td.matched.length === td.cards.length) {
+        document.getElementById('hp-bar-wrap').style.display = '';
+        setTimeout(() => hitEnemy(), 600);
+      }
+    } else {
+      // No match
+      setTimeout(() => {
+        document.getElementById('mc-'+a).textContent = '❓';
+        document.getElementById('mc-'+a).classList.remove('revealed');
+        document.getElementById('mc-'+a).classList.add('hidden-card');
+        document.getElementById('mc-'+b).textContent = '❓';
+        document.getElementById('mc-'+b).classList.remove('revealed');
+        document.getElementById('mc-'+b).classList.add('hidden-card');
+        td.revealed = [];
+        td.lock = false;
+      }, 800);
+    }
+  }
+}
+
+// ============================================================
+// COMBAT
+// ============================================================
+function hitEnemy() {
+  state.enemyHP--;
+  state.score += 30;
+  renderHUD();
+  updateEnemyHP();
+
+  if (state.enemyHP <= 0) {
+    playFinisher();
+  } else {
+    // Regular hit — hero lunges, enemy recoils
+    const hero = document.getElementById('hero-char');
+    const enemy = document.getElementById('enemy-char');
+    const light = document.getElementById('lightning');
+    light.classList.add('flash');
+    setTimeout(() => light.classList.remove('flash'), 500);
+    hero.className = 'hero-char attacking';
+    setTimeout(() => {
+      enemy.classList.add('hit');
+      popImpact('💢');
+    }, 250);
+    setTimeout(() => { hero.className = 'hero-char'; enemy.classList.remove('hit'); }, 700);
+
+    // More hits needed — new sub-task
+    state.taskData = generateTask(state.currentLevel);
+    setTimeout(() => renderTask(), 750);
+  }
+}
+
+// Big cinematic finishing fight sequence
+function playFinisher() {
+  const hero = document.getElementById('hero-char');
+  const enemy = document.getElementById('enemy-char');
+  const light = document.getElementById('lightning');
+  const gameScreen = document.getElementById('game-screen');
+
+  // Clear the task area so the fight has the spotlight
+  document.getElementById('task-area').style.opacity = '0';
+  document.getElementById('hp-bar-wrap').style.display = 'none';
+
+  // Hit 1 — combo of quick jabs
+  let jabs = 0;
+  const jabEmojis = ['👊','💢','⚡','💥'];
+  const jabInterval = setInterval(() => {
+    enemy.classList.remove('hit');
+    void enemy.offsetWidth;
+    enemy.classList.add('hit');
+    popImpact(jabEmojis[jabs % jabEmojis.length]);
+    light.classList.add('flash');
+    setTimeout(() => light.classList.remove('flash'), 150);
+    jabs++;
+    if (jabs >= 3) {
+      clearInterval(jabInterval);
+      // The big finisher leap + punch
+      setTimeout(() => {
+        hero.className = 'hero-char finisher';
+        setTimeout(() => {
+          // Impact moment
+          gameScreen.classList.add('shake-hard');
+          popImpact('💥');
+          light.classList.add('flash');
+          enemy.classList.add('defeated');
+          setTimeout(() => gameScreen.classList.remove('shake-hard'), 500);
+          setTimeout(() => light.classList.remove('flash'), 500);
+        }, 600);
+        setTimeout(() => { hero.className = 'hero-char'; }, 1200);
+      }, 250);
+      // Show victory after the whole scene plays out
+      setTimeout(() => {
+        document.getElementById('task-area').style.opacity = '';
+        showVictory();
+      }, 2200);
+    }
+  }, 220);
+}
+
+function popImpact(emoji) {
+  const burst = document.getElementById('impact-burst');
+  burst.textContent = emoji;
+  burst.className = 'impact-burst';
+  void burst.offsetWidth;
+  burst.className = 'impact-burst boom';
+}
+
+function onMistake() {
+  state.mistakes++;
+  state.lives--;
+  renderHUD();
+  showFeedback('❌');
+
+  if (state.lives <= 0) {
+    setTimeout(() => showGameOver(), 500);
+  }
+}
+
+// ============================================================
+// VICTORY / GAME OVER
+// ============================================================
+function showVictory() {
+  const stars = state.mistakes === 0 ? 3 : state.mistakes <= 2 ? 2 : 1;
+  state.stars[state.currentLevel] = Math.max(state.stars[state.currentLevel], stars);
+  state.completed[state.currentLevel] = true;
+
+  document.getElementById('stars-display').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  document.getElementById('victory-battle').textContent = `🦸🏻‍♂️⚡${LEVEL_ENEMIES[state.currentLevel]}`;
+  document.getElementById('wisdom-text').textContent = t('wisdoms')[state.currentLevel];
+  document.getElementById('victory-title').textContent = t('victory');
+
+  const isLast = state.currentLevel === 4;
+  document.getElementById('next-btn-text').textContent = isLast ? (lang==='ru'?'🏆 Финал!':'🏆 Финал!') : t('next');
+
+  showScreen('victory-screen');
+  // Teacher speaks the wisdom aloud
+  setTimeout(() => speak(t('wisdoms')[state.currentLevel]), 600);
+}
+
+function showGameOver() {
+  stopSpeech();
+  showScreen('gameover-screen');
+  setTimeout(() => speak(t('goText')), 300);
+}
+
+function nextLevel() {
+  if (state.currentLevel === 4) {
+    showFinalScreen();
+  } else {
+    startLevel(state.currentLevel + 1);
+  }
+}
+
+function retryLevel() {
+  startLevel(state.currentLevel);
+}
+
+function showFinalScreen() {
+  document.getElementById('final-title').innerHTML = t('finalTitle').replace('\n','<br>');
+  document.getElementById('final-wisdom-text').textContent = t('finalWisdom');
+  showScreen('final-screen');
+  setTimeout(() => speak(t('finalWisdom'), { rate: 0.9 }), 700);
+}
+
+// ============================================================
+// FEEDBACK
+// ============================================================
+function showFeedback(emoji) {
+  const el = document.getElementById('feedback-flash');
+  el.textContent = emoji;
+  el.className = '';
+  void el.offsetWidth;
+  el.className = 'show';
+}
+
+function showCombo(text) {
+  const el = document.getElementById('combo-text');
+  el.textContent = text;
+  el.className = '';
+  void el.offsetWidth;
+  el.className = 'show';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+buildBackground();
+updateTexts();
+showMenu();
+
+// Warm up speech voices (some browsers load them async)
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+</script>
+</body>
+</html>
