@@ -2084,6 +2084,9 @@ function renderTask() {
   const instrText = document.getElementById('task-text');
   slots.innerHTML = '';
   grid.innerHTML = '';
+  // reset any tap-to-replay handler from a previous (letters) task
+  const instrBoxReset = document.getElementById('task-instruction');
+  if (instrBoxReset) { instrBoxReset.onclick = null; instrBoxReset.style.cursor = ''; }
 
   if (td.type === 'numbers') {
     instrEmoji.textContent = '🔢';
@@ -2108,8 +2111,13 @@ function renderTask() {
     });
 
   } else if (td.type === 'letters') {
-    instrEmoji.textContent = '🔤';
+    instrEmoji.textContent = '🔊';
     instrText.textContent = t('task2_pick') + '"' + td.word + '"';
+    // Voice the word the child needs to spell, and allow replay by tapping the task
+    const sayWord = () => speak(t('task2_pick') + td.word, { rate: 0.85 });
+    setTimeout(sayWord, 350);
+    const instrBox = document.getElementById('task-instruction');
+    if (instrBox) { instrBox.style.cursor = 'pointer'; instrBox.onclick = sayWord; }
     // Slots for collected
     for (let i = 0; i < td.letters.length; i++) {
       const s = document.createElement('div');
