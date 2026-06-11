@@ -1380,8 +1380,9 @@ const CHAR_IMG = {
 };
 
 // Returns markup that prefers the image, falling back to SVG if it fails to load.
+const ART_VERSION = '2'; // bump when art files change, to bypass browser cache
 function charMarkup(key) {
-  const src = CHAR_IMG[key];
+  const src = CHAR_IMG[key] + '?v=' + ART_VERSION;
   return `<img src="${src}" alt="" draggable="false" ` +
     `style="width:1em;height:1em;object-fit:contain;display:block" ` +
     `onerror="this.outerHTML=CHARSVG['${key}']">`;
