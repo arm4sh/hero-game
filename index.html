@@ -530,7 +530,7 @@
   }
 
   .hero-char {
-    font-size: clamp(60px, 17vw, 104px);
+    font-size: clamp(110px, 34vw, 200px);
     animation: heroIdle 1.5s ease-in-out infinite;
     position: relative;
     cursor: default;
@@ -554,7 +554,7 @@
   }
 
   .enemy-char {
-    font-size: clamp(64px, 18vw, 112px);
+    font-size: clamp(118px, 36vw, 210px);
     animation: enemyIdle 1.4s ease-in-out infinite;
     position: relative;
     filter: drop-shadow(0 0 11px rgba(255,0,51,0.7)) drop-shadow(0 4px 6px rgba(0,0,0,0.5));
@@ -663,8 +663,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(6px, 5vw, 40px);
-    z-index: 45;
+    gap: clamp(0px, 2vw, 24px);
+    z-index: 210;   /* above the ✅ feedback / combo text so the fight is never covered */
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.25s;
@@ -672,11 +672,11 @@
   #fight-stage.active { opacity: 1; }
 
   .fs-hero {
-    font-size: clamp(82px, 25vw, 172px);
+    font-size: clamp(150px, 46vw, 300px);
     filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
   }
   .fs-enemy {
-    font-size: clamp(82px, 25vw, 172px);
+    font-size: clamp(150px, 46vw, 300px);
     transform: scaleX(-1);
     filter: drop-shadow(0 0 14px rgba(255,0,51,0.75)) drop-shadow(0 6px 10px rgba(0,0,0,0.5));
   }
@@ -684,7 +684,7 @@
     position: absolute;
     left: 50%; top: 46%;
     transform: translate(-50%,-50%);
-    font-size: clamp(80px, 26vw, 175px);
+    font-size: clamp(140px, 44vw, 290px);
     opacity: 0;
     z-index: 50;
   }
@@ -761,7 +761,7 @@
     margin-bottom: 4px;
   }
   .ei-enemy {
-    font-size: clamp(90px, 28vw, 180px);
+    font-size: clamp(150px, 52vw, 300px);
     filter: drop-shadow(0 0 18px rgba(255,0,51,0.7)) drop-shadow(0 8px 12px rgba(0,0,0,0.55));
     animation: villainLoom 2.2s ease-in-out infinite;
     margin: 6px 0;
@@ -2301,6 +2301,7 @@ function hitEnemy() {
     const light = document.getElementById('lightning');
 
     const gameScreen = document.getElementById('game-screen');
+    clearFeedback();
     stage.classList.add('active');
     fsHero.className = 'fs-hero'; fsEnemy.className = 'fs-enemy';
     void fsHero.offsetWidth;
@@ -2334,6 +2335,7 @@ function playFinisher() {
   // Clear the task area so the fight takes the spotlight
   document.getElementById('task-area').style.opacity = '0';
   document.getElementById('hp-bar-wrap').style.display = 'none';
+  clearFeedback();
   stage.classList.add('active');
   fsHero.className = 'fs-hero'; fsEnemy.className = 'fs-enemy';
 
@@ -2477,6 +2479,12 @@ function showCombo(text) {
   el.className = '';
   void el.offsetWidth;
   el.className = 'show';
+}
+
+// Hide the ✅ / combo text so they never cover the punch animation
+function clearFeedback() {
+  document.getElementById('feedback-flash').className = '';
+  document.getElementById('combo-text').className = '';
 }
 
 // ============================================================
