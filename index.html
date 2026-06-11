@@ -360,6 +360,26 @@
     margin-bottom: 4px;
   }
 
+  /* Boogeyman portrait on the level card */
+  .level-card .lv-enemy {
+    position: relative;
+    font-size: 66px;
+    line-height: 1;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 0 8px rgba(255,0,51,0.55));
+  }
+  .level-card .lv-enemy.locked-art {
+    filter: grayscale(1) brightness(0.3);
+  }
+  .level-card .lv-lock {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    filter: drop-shadow(0 1px 3px #000);
+  }
+
   .level-card .lv-stars {
     margin-top: 6px;
     font-size: 14px;
@@ -827,34 +847,25 @@
     cursor: pointer;
   }
 
-  .hp-bar-wrap {
-    position: absolute;
-    bottom: 70px;
-    right: 14px;
-    width: 80px;
+  /* Enemy column: black-heart health sits right above the boogeyman */
+  .enemy-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
   }
 
-  .hp-bar-bg {
-    height: 8px;
-    background: rgba(100,0,0,0.4);
-    border-radius: 4px;
-    border: 1px solid #aa0000;
-    overflow: hidden;
+  .enemy-hp {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 4px;
+    font-size: 22px;
+    line-height: 1;
+    filter: drop-shadow(0 0 6px rgba(255,0,51,0.6));
+    z-index: 16;
   }
-
-  .hp-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ff4444, #ff0000);
-    border-radius: 4px;
-    transition: width 0.3s;
-  }
-
-  .hp-label {
-    text-align: center;
-    font-size: 9px;
-    color: #ff6666;
-    margin-top: 2px;
-  }
+  .enemy-hp .ehp { transition: opacity 0.3s, transform 0.3s; }
+  .enemy-hp .ehp.lost { opacity: 0.25; filter: grayscale(1); transform: scale(0.8); }
 
   /* ===== VICTORY SCREEN ===== */
   #victory-screen {
@@ -1176,15 +1187,13 @@
       <div class="answers-grid" id="answers-grid"></div>
     </div>
 
-    <div class="hp-bar-wrap" id="hp-bar-wrap">
-      <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-bar-fill"></div></div>
-      <div class="hp-label" id="hp-label">HP</div>
-    </div>
-
     <div id="battle-area">
       <div class="hero-char" id="hero-char">🦸🏻‍♂️</div>
       <div class="impact-burst" id="impact-burst" style="left:50%;top:-20px">💥</div>
-      <div class="enemy-char" id="enemy-char">👹</div>
+      <div class="enemy-col" id="enemy-col">
+        <div class="enemy-hp" id="enemy-hp"></div>
+        <div class="enemy-char" id="enemy-char">👹</div>
+      </div>
     </div>
 
     <!-- Centered fight animation overlay -->
@@ -1893,9 +1902,9 @@ function renderLevelSelect() {
     card.className = 'level-card ' + (state.completed[i] ? 'completed' : (isLocked ? 'locked' : 'unlocked'));
     const stars = '⭐'.repeat(state.stars[i]) + '☆'.repeat(3 - state.stars[i]);
     card.innerHTML = `
-      <div class="lv-icon">${isLocked ? '🔒' : LEVEL_ICONS[i]}</div>
-      <div class="lv-num">${t('lvlLabel')} ${i+1}</div>
-      <div class="lv-name">${t('lvlDesc')[i]}</div>
+      <div class="lv-enemy${isLocked ? ' locked-art' : ''}">${charMarkup('e'+i)}${isLocked ? '<span class="lv-lock">🔒</span>' : ''}</div>
+      <div class="lv-num">${t('lvlLabel')} ${i+1} — ${t('lvlNames')[i]}</div>
+      <div class="lv-name">${LEVEL_ICONS[i]} ${t('lvlDesc')[i]}</div>
       <div class="lv-stars">${state.completed[i] ? stars : (isLocked ? '' : '☆☆☆')}</div>
     `;
     if (!isLocked) card.onclick = () => showEnemyIntro(i);
@@ -2049,7 +2058,7 @@ function startLevel(levelIdx) {
   document.getElementById('fs-hero').className = 'fs-hero';
   document.getElementById('fight-stage').classList.remove('active');
   document.getElementById('task-area').style.opacity = '';
-  document.getElementById('hp-bar-wrap').style.display = '';
+  document.getElementById('enemy-hp').style.display = '';
 }
 
 function renderHUD() {
@@ -2059,9 +2068,12 @@ function renderHUD() {
 }
 
 function updateEnemyHP() {
-  const pct = (state.enemyHP / state.maxEnemyHP) * 100;
-  document.getElementById('hp-bar-fill').style.width = pct + '%';
-  document.getElementById('hp-label').textContent = '👹 ' + state.enemyHP + '/' + state.maxEnemyHP;
+  const el = document.getElementById('enemy-hp');
+  let html = '';
+  for (let i = 0; i < state.maxEnemyHP; i++) {
+    html += `<span class="ehp${i < state.enemyHP ? '' : ' lost'}">🖤</span>`;
+  }
+  el.innerHTML = html;
 }
 
 function renderTask() {
@@ -2147,7 +2159,7 @@ function renderTask() {
   } else if (td.type === 'memory') {
     instrEmoji.textContent = '🃏';
     instrText.textContent = t('task5');
-    document.getElementById('hp-bar-wrap').style.display = 'none';
+    document.getElementById('enemy-hp').style.display = 'none';
 
     const memGrid = document.createElement('div');
     memGrid.className = 'memory-grid';
@@ -2264,7 +2276,7 @@ function handleMemory(idx) {
       state.score += 10;
       renderHUD();
       if (td.matched.length === td.cards.length) {
-        document.getElementById('hp-bar-wrap').style.display = '';
+        document.getElementById('enemy-hp').style.display = '';
         setTimeout(() => hitEnemy(), 600);
       }
     } else {
@@ -2335,7 +2347,7 @@ function playFinisher() {
 
   // Clear the task area so the fight takes the spotlight
   document.getElementById('task-area').style.opacity = '0';
-  document.getElementById('hp-bar-wrap').style.display = 'none';
+  document.getElementById('enemy-hp').style.display = 'none';
   clearFeedback();
   stage.classList.add('active');
   fsHero.className = 'fs-hero'; fsEnemy.className = 'fs-enemy';
